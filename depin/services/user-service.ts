@@ -1,0 +1,187 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import { dbManager } from '../database/manager';
+import { hederaWalletManager, HederaWallet } from '../wallet/hedera-wallet';
+
+export interface User {
+  id: number;
+  email: string;
+  hederaAccountId: string | null;
+  hederaPublicKey: string | null;
+  createdAt: Date;
+  isActive: boolean;
+}
+
+export interface CreateUserData {
+  email: string;
+  password: string;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export class UserService {
+  private db = dbManager.getDatabase();
+  private jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+  // Create a new user with embedded Hedera wallet
+  async createUser(userData: CreateUserData): Promise<{ user: User; wallet: HederaWallet; token: string }> {
+    try {
+      // Check if user already exists
+      const existingUser = this.db.prepare('SELECT id FROM users WHERE email = ?').get(userData.email);
+      if (existingUser) {
+        throw new Error('User with this email already exists');
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(userData.password, 12);
+
+      // Create Hedera wallet
+      const wallet = await hederaWalletManager.createUserWallet();
+
+      // Insert user into database
+      const insertUser = this.db.prepare(`
+        INSERT INTO users (email, password_hash, hedera_account_id, hedera_private_key_encrypted, hedera_public_key)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+
+      const result = insertUser.run(
+        userData.email,
+        passwordHash,
+        wallet.accountId,
+        wallet.encryptedPrivateKey,
+        wallet.publicKey
+      );
+
+      const userId = result.lastInsertRowid as number;
+
+      // Create session token
+      const token = this.generateToken(userId);
+
+      // Store session
+      this.createSession(userId, token);
+
+      const user: User = {
+        id: userId,
+        email: userData.email,
+        hederaAccountId: wallet.accountId,
+        hederaPublicKey: wallet.publicKey,
+        createdAt: new Date(),
+        isActive: true
+      };
+
+      return { user, wallet, token };
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new Error(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Login user
+  async loginUser(loginData: LoginData): Promise<{ user: User; token: string }> {
+    try {
+      const user = this.db.prepare('SELECT * FROM users WHERE email = ? AND is_active = 1').get(loginData.email) as any;
+      
+      if (!user) {
+        throw new Error('Invalid email or password');
+      }
+
+      const isValidPassword = await bcrypt.compare(loginData.password, user.password_hash);
+      if (!isValidPassword) {
+        throw new Error('Invalid email or password');
+      }
+
+      // Generate new session token
+      const token = this.generateToken(user.id);
+      this.createSession(user.id, token);
+
+      const userResponse: User = {
+        id: user.id,
+        email: user.email,
+        hederaAccountId: user.hedera_account_id,
+        hederaPublicKey: user.hedera_public_key,
+        createdAt: new Date(user.created_at),
+        isActive: user.is_active
+      };
+
+      return { user: userResponse, token };
+    } catch (error) {
+      console.error('Error logging in user:', error);
+      throw new Error(`Failed to login: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Get user by ID
+  async getUserById(userId: number): Promise<User | null> {
+    try {
+      const user = this.db.prepare('SELECT * FROM users WHERE id = ? AND is_active = 1').get(userId) as any;
+      
+      if (!user) {
+        return null;
+      }
+
+      return {
+        id: user.id,
+        email: user.email,
+        hederaAccountId: user.hedera_account_id,
+        hederaPublicKey: user.hedera_public_key,
+        createdAt: new Date(user.created_at),
+        isActive: user.is_active
+      };
+    } catch (error) {
+      console.error('Error getting user:', error);
+      return null;
+    }
+  }
+
+  // Generate JWT token
+  private generateToken(userId: number): string {
+    return jwt.sign(
+      { userId, iat: Math.floor(Date.now() / 1000) },
+      this.jwtSecret,
+      { expiresIn: '7d' }
+    );
+  }
+
+  // Create user session
+  private createSession(userId: number, token: string): void {
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    
+    const insertSession = this.db.prepare(`
+      INSERT INTO user_sessions (user_id, session_token, expires_at)
+      VALUES (?, ?, ?)
+    `);
+    
+    insertSession.run(userId, token, expiresAt.toISOString());
+  }
+
+  // Verify JWT token
+  verifyToken(token: string): { userId: number } | null {
+    try {
+      const decoded = jwt.verify(token, this.jwtSecret) as any;
+      return { userId: decoded.userId };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Get user's Hedera wallet balance
+  async getUserWalletBalance(userId: number): Promise<number> {
+    try {
+      const user = await this.getUserById(userId);
+      if (!user || !user.hederaAccountId) {
+        throw new Error('User or Hedera account not found');
+      }
+
+      return await hederaWalletManager.getAccountBalance(user.hederaAccountId);
+    } catch (error) {
+      console.error('Error getting wallet balance:', error);
+      throw new Error(`Failed to get wallet balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+}
+
+export const userService = new UserService();

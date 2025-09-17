@@ -9,8 +9,8 @@ import { theme } from '../theme';
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "AIDEN" },
+    { name: "description", content: "Welcome to AIDEN!" },
   ];
 }
 
