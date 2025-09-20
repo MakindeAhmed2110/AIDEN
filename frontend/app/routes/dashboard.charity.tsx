@@ -1,4 +1,5 @@
 import type { Route } from "./+types/dashboard.charity";
+import { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -6,13 +7,39 @@ import {
   CardContent, 
   Button,
   Grid,
-  LinearProgress
+  LinearProgress,
+  Chip,
+  IconButton,
+  Tooltip,
+  Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { 
   VolunteerActivism as CharityIcon,
   TrendingUp as TrendingIcon,
   People as PeopleIcon,
-  School as SchoolIcon
+  School as SchoolIcon,
+  ContentCopy as CopyIcon,
+  OpenInNew as ExternalLinkIcon,
+  ExpandMore as ExpandMoreIcon,
+  Security as SecurityIcon,
+  AccountBalance as VaultIcon,
+  CheckCircle as CheckCircleIcon,
+  LocalHospital as HealthIcon,
+  Home as HomeIcon,
+  Restaurant as FoodIcon,
+  School as EducationIcon,
+  Work as WorkIcon,
+  Water as WaterIcon,
+  Wifi as ConnectivityIcon
 } from '@mui/icons-material';
 
 // PolySans font family constant
@@ -26,6 +53,12 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Charity() {
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+
+  // Hedera Vault Information
+  const vaultAddress = "0.0.6858706";
+  const vaultUrl = `https://hashscan.io/testnet/contract/${vaultAddress}/abi`;
+
   const charityStats = [
     {
       icon: <TrendingIcon sx={{ fontSize: 40, color: '#1e3a8a' }} />,
@@ -68,8 +101,106 @@ export default function Charity() {
     }
   ];
 
+  const charitySolutions = [
+    {
+      category: "Healthcare & Medical Support",
+      icon: <HealthIcon sx={{ color: '#e53e3e' }} />,
+      solutions: [
+        "Medical equipment for rural clinics",
+        "Emergency healthcare funding",
+        "Mental health support programs",
+        "Vaccination campaigns",
+        "Mobile health units"
+      ]
+    },
+    {
+      category: "Housing & Shelter",
+      icon: <HomeIcon sx={{ color: '#38a169' }} />,
+      solutions: [
+        "Emergency housing for families",
+        "Homeless shelter improvements",
+        "Affordable housing projects",
+        "Disaster relief housing",
+        "Senior living facilities"
+      ]
+    },
+    {
+      category: "Food Security",
+      icon: <FoodIcon sx={{ color: '#d69e2e' }} />,
+      solutions: [
+        "Community food banks",
+        "School meal programs",
+        "Nutrition education",
+        "Urban farming initiatives",
+        "Emergency food distribution"
+      ]
+    },
+    {
+      category: "Education & Learning",
+      icon: <EducationIcon sx={{ color: '#3182ce' }} />,
+      solutions: [
+        "School infrastructure improvements",
+        "Educational technology access",
+        "Scholarship programs",
+        "Adult literacy classes",
+        "STEM education initiatives"
+      ]
+    },
+    {
+      category: "Employment & Skills",
+      icon: <WorkIcon sx={{ color: '#805ad5' }} />,
+      solutions: [
+        "Job training programs",
+        "Small business grants",
+        "Entrepreneurship workshops",
+        "Skills development courses",
+        "Employment placement services"
+      ]
+    },
+    {
+      category: "Clean Water & Sanitation",
+      icon: <WaterIcon sx={{ color: '#00b5d8' }} />,
+      solutions: [
+        "Water well installations",
+        "Water purification systems",
+        "Sanitation facilities",
+        "Hygiene education programs",
+        "Water conservation projects"
+      ]
+    },
+    {
+      category: "Digital Connectivity",
+      icon: <ConnectivityIcon sx={{ color: '#38b2ac' }} />,
+      solutions: [
+        "Internet access for underserved areas",
+        "Digital literacy training",
+        "Computer lab setups",
+        "Online education platforms",
+        "Telemedicine connectivity"
+      ]
+    }
+  ];
+
+  const handleCopyVaultAddress = () => {
+    navigator.clipboard.writeText(vaultAddress);
+    setSnackbar({ open: true, message: 'Vault address copied to clipboard!', severity: 'success' });
+  };
+
+  const handleOpenVaultExplorer = () => {
+    window.open(vaultUrl, '_blank');
+  };
+
+  const showSnackbar = (message: string, severity: 'success' | 'error') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   return (
     <Box>
+      {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ 
           fontWeight: 700, 
@@ -86,6 +217,73 @@ export default function Charity() {
           Track your charitable contributions and see the positive impact you're making in the community.
         </Typography>
       </Box>
+
+      {/* Hedera Vault Transparency Section */}
+      <Card sx={{ 
+        mb: 4,
+        border: 'none', 
+        boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
+        borderRadius: '16px',
+        background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <CardContent sx={{ p: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <VaultIcon sx={{ fontSize: 40, color: '#1e3a8a', mr: 2 }} />
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e3a8a', fontFamily: polySansFont }}>
+                Hedera Charity Vault
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
+                Transparent and decentralized charity fund management
+              </Typography>
+            </Box>
+          </Box>
+          
+          <Box sx={{ 
+            p: 3, 
+            backgroundColor: 'rgba(30, 58, 138, 0.05)', 
+            borderRadius: '12px',
+            border: '1px solid rgba(30, 58, 138, 0.1)'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3a8a', fontFamily: polySansFont }}>
+                Vault Address
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Tooltip title="Copy address">
+                  <IconButton onClick={handleCopyVaultAddress} size="small">
+                    <CopyIcon sx={{ color: '#1e3a8a' }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="View on Hashscan">
+                  <IconButton onClick={handleOpenVaultExplorer} size="small">
+                    <ExternalLinkIcon sx={{ color: '#1e3a8a' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
+            
+            <Typography variant="body1" sx={{ 
+              fontFamily: 'monospace', 
+              backgroundColor: 'rgba(0,0,0,0.05)', 
+              p: 2, 
+              borderRadius: '8px',
+              color: '#1e3a8a',
+              fontWeight: 600
+            }}>
+              {vaultAddress}
+            </Typography>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, gap: 1 }}>
+              <CheckCircleIcon sx={{ color: '#10b981', fontSize: 20 }} />
+              <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
+                Verified smart contract on Hedera Testnet
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
 
       {/* Stats Grid */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -108,13 +306,13 @@ export default function Charity() {
                 <Box sx={{ mb: 2 }}>
                   {stat.icon}
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e3a8a', mb: 1 }}>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e3a8a', mb: 1, fontFamily: polySansFont }}>
                   {stat.value}
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#000000', mb: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#000000', mb: 1, fontFamily: polySansFont }}>
                   {stat.title}
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#666666' }}>
+                <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
                   {stat.description}
                 </Typography>
               </CardContent>
@@ -123,8 +321,82 @@ export default function Charity() {
         ))}
       </Grid>
 
+      {/* Charity Solutions Section */}
+      <Card sx={{ 
+        mb: 4,
+        border: 'none', 
+        boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
+        borderRadius: '16px',
+        background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.08) 0%, rgba(160, 231, 229, 0.08) 100%)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <CardContent sx={{ p: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <SecurityIcon sx={{ fontSize: 40, color: '#1e3a8a', mr: 2 }} />
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e3a8a', fontFamily: polySansFont }}>
+                Charity Solutions
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
+                Comprehensive solutions addressing critical community needs
+              </Typography>
+            </Box>
+          </Box>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {charitySolutions.map((category, index) => (
+              <Accordion key={index} sx={{ 
+                border: '1px solid rgba(30, 58, 138, 0.1)',
+                borderRadius: '12px !important',
+                '&:before': { display: 'none' },
+                '&.Mui-expanded': {
+                  margin: '0 0 8px 0'
+                }
+              }}>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon sx={{ color: '#1e3a8a' }} />}
+                  sx={{ 
+                    backgroundColor: 'rgba(30, 58, 138, 0.05)',
+                    borderRadius: '12px',
+                    '&.Mui-expanded': {
+                      borderBottomLeftRadius: 0,
+                      borderBottomRightRadius: 0
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {category.icon}
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3a8a', fontFamily: polySansFont }}>
+                      {category.category}
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ p: 3 }}>
+                  <List sx={{ p: 0 }}>
+                    {category.solutions.map((solution, solutionIndex) => (
+                      <ListItem key={solutionIndex} sx={{ px: 0, py: 1 }}>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          <CheckCircleIcon sx={{ color: '#10b981', fontSize: 20 }} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={solution}
+                          primaryTypographyProps={{
+                            fontFamily: polySansFont,
+                            color: '#666666'
+                          }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Box>
+        </CardContent>
+      </Card>
+
       {/* Active Projects */}
-      <Typography variant="h5" sx={{ fontWeight: 700, color: '#000000', mb: 3 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, color: '#000000', mb: 3, fontFamily: polySansFont }}>
         Active Projects
       </Typography>
       <Grid container spacing={3}>
@@ -135,25 +407,30 @@ export default function Charity() {
               boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
               borderRadius: '16px',
               background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.08) 0%, rgba(160, 231, 229, 0.08) 100%)',
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 30px rgba(176, 136, 240, 0.25)',
+                transition: 'all 0.3s ease-in-out'
+              }
             }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <CharityIcon sx={{ fontSize: 32, color: '#1e3a8a', mr: 2 }} />
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#000000' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#000000', fontFamily: polySansFont }}>
                       {project.name}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#666666' }}>
+                    <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
                       {project.amount} donated
                     </Typography>
                   </Box>
                 </Box>
-                <Typography variant="body2" sx={{ color: '#666666', mb: 2 }}>
+                <Typography variant="body2" sx={{ color: '#666666', mb: 2, fontFamily: polySansFont }}>
                   {project.description}
                 </Typography>
                 <Box sx={{ mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#666666', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#666666', mb: 1, fontFamily: polySansFont }}>
                     Progress: {project.progress}%
                   </Typography>
                   <LinearProgress 
@@ -174,6 +451,22 @@ export default function Charity() {
           </Grid>
         ))}
       </Grid>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+          sx={{ fontFamily: polySansFont }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

@@ -9,8 +9,8 @@ const __dirname = path.dirname(__filename);
 
 console.log('🚀 Starting Aiden DePIN Backend...');
 
-// Start the API server
-const server = spawn('node', ['--loader', 'tsx/esm', 'app.ts'], {
+// Start the API server using tsx
+const server = spawn('npx', ['tsx', 'app.ts'], {
   cwd: __dirname + '/..',
   stdio: 'inherit',
   shell: true
