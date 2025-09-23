@@ -1,9 +1,9 @@
 import rateLimit from 'express-rate-limit';
 
-// General rate limiter
+// General rate limiter (more lenient for development)
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // limit each IP to 1000 requests per windowMs (increased for development)
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.'
@@ -12,10 +12,10 @@ export const generalLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Auth rate limiter (stricter for auth endpoints)
+// Auth rate limiter (more lenient for development)
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 auth requests per windowMs
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // limit each IP to 100 auth requests per minute (increased for development)
   message: {
     success: false,
     message: 'Too many authentication attempts, please try again later.'
@@ -31,6 +31,18 @@ export const apiLimiter = rateLimit({
   message: {
     success: false,
     message: 'Too many API requests, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Health check rate limiter (more lenient for development)
+export const healthLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 120, // limit each IP to 120 health checks per minute (2 per second)
+  message: {
+    success: false,
+    message: 'Too many health check requests, please try again later.'
   },
   standardHeaders: true,
   legacyHeaders: false,

@@ -1,0 +1,16 @@
+{
+    "buildCommand": "npm run build",
+    "outputDirectory": "build/client",
+    "framework": null,
+    "functions": {
+      "build/server/index.js": {
+        "runtime": "nodejs18.x"
+      }
+    },
+    "rewrites": [
+      {
+        "source": "/(.*)",
+        "destination": "/build/server/index.js"
+      }
+    ]
+  }

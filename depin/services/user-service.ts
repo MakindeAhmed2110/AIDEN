@@ -9,6 +9,7 @@ export interface User {
   email: string;
   hederaAccountId: string | null;
   hederaPublicKey: string | null;
+  privyId?: string | null;
   createdAt: Date;
   isActive: boolean;
 }
@@ -21,6 +22,10 @@ export interface CreateUserData {
 export interface LoginData {
   email: string;
   password: string;
+}
+
+export interface PrivyUserData {
+  email: string;
 }
 
 export class UserService {
@@ -140,7 +145,11 @@ export class UserService {
   // Generate JWT token
   private generateToken(userId: number): string {
     return jwt.sign(
-      { userId, iat: Math.floor(Date.now() / 1000) },
+      { 
+        userId, 
+        iat: Math.floor(Date.now() / 1000),
+        jti: uuidv4() // Add unique token ID
+      },
       this.jwtSecret,
       { expiresIn: '7d' }
     );
@@ -150,6 +159,13 @@ export class UserService {
   private createSession(userId: number, token: string): void {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     
+    // First, delete any existing sessions for this user
+    const deleteExisting = this.db.prepare(`
+      DELETE FROM user_sessions WHERE user_id = ?
+    `);
+    deleteExisting.run(userId);
+    
+    // Then insert the new session
     const insertSession = this.db.prepare(`
       INSERT INTO user_sessions (user_id, session_token, expires_at)
       VALUES (?, ?, ?)
@@ -164,6 +180,122 @@ export class UserService {
       const decoded = jwt.verify(token, this.jwtSecret) as any;
       return { userId: decoded.userId };
     } catch (error) {
+      return null;
+    }
+  }
+
+  // Create a new user with email-only authentication
+  async createPrivyUser(userData: PrivyUserData): Promise<{ user: User; wallet: HederaWallet; token: string }> {
+    try {
+      // Check if user already exists by email only
+      const existingUser = this.db.prepare('SELECT id FROM users WHERE email = ?').get(userData.email);
+      if (existingUser) {
+        console.log('🔄 User exists, returning existing wallet data');
+        // If user exists, get their data and return it
+        const user = await this.getUserById(existingUser.id);
+        if (user) {
+          const token = this.generateToken(user.id);
+          this.createSession(user.id, token);
+          
+          // Return existing wallet data (we don't expose the actual wallet object for security)
+          const wallet: HederaWallet = {
+            accountId: user.hederaAccountId || '',
+            privateKey: '', // Never expose private key
+            publicKey: user.hederaPublicKey || '',
+            encryptedPrivateKey: '' // Never expose encrypted private key
+          };
+          
+          return { user, wallet, token };
+        }
+      }
+
+      console.log('🆕 Creating new user with email:', userData.email);
+      
+      // Create Hedera wallet for new user
+      const wallet = await hederaWalletManager.createUserWallet();
+
+      // Insert user into database (no privy_id needed)
+      const insertUser = this.db.prepare(`
+        INSERT INTO users (email, hedera_account_id, hedera_private_key_encrypted, hedera_public_key)
+        VALUES (?, ?, ?, ?)
+      `);
+
+      const result = insertUser.run(
+        userData.email,
+        wallet.accountId,
+        wallet.encryptedPrivateKey,
+        wallet.publicKey
+      );
+
+      const userId = result.lastInsertRowid as number;
+
+      // Create session token
+      const token = this.generateToken(userId);
+
+      // Store session
+      this.createSession(userId, token);
+
+      const user: User = {
+        id: userId,
+        email: userData.email,
+        hederaAccountId: wallet.accountId,
+        hederaPublicKey: wallet.publicKey,
+        privyId: null, // No privy_id needed
+        createdAt: new Date(),
+        isActive: true
+      };
+
+      console.log('✅ User created successfully with wallet:', wallet.accountId);
+      return { user, wallet, token };
+    } catch (error) {
+      console.error('Error creating user:', error);
+      
+      // If it's a UNIQUE constraint error, try to get the existing user
+      if (error instanceof Error && error.message.includes('UNIQUE constraint failed: users.email')) {
+        console.log('🔄 UNIQUE constraint error, attempting to get existing user');
+        const existingUser = this.db.prepare('SELECT id FROM users WHERE email = ?').get(userData.email);
+        if (existingUser) {
+          const user = await this.getUserById(existingUser.id);
+          if (user) {
+            const token = this.generateToken(user.id);
+            this.createSession(user.id, token);
+            
+            const wallet: HederaWallet = {
+              accountId: user.hederaAccountId || '',
+              privateKey: '',
+              publicKey: user.hederaPublicKey || '',
+              encryptedPrivateKey: ''
+            };
+            
+            return { user, wallet, token };
+          }
+        }
+      }
+      
+      throw new Error(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Get user by Privy ID
+  async getUserByPrivyId(privyId: string): Promise<User | null> {
+    try {
+      const user = this.db.prepare('SELECT * FROM users WHERE privy_id = ? AND is_active = 1').get(privyId) as any;
+      
+      if (!user) {
+        return null;
+      }
+
+      return {
+        id: user.id,
+        email: user.email,
+        hederaAccountId: user.hedera_account_id,
+        hederaPublicKey: user.hedera_public_key,
+        privyId: user.privy_id,
+        createdAt: new Date(user.created_at),
+        isActive: user.is_active
+      };
+    } catch (error) {
+      console.error('Error getting user by Privy ID:', error);
       return null;
     }
   }

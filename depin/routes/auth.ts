@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { userService, CreateUserData, LoginData } from '../services/user-service';
+import { userService, CreateUserData, LoginData, PrivyUserData } from '../services/user-service';
 
 const router = Router();
 
@@ -137,6 +137,97 @@ router.get('/profile', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get profile'
+    });
+  }
+});
+
+// Email-only authentication endpoint
+router.post('/privy-auth', async (req: Request, res: Response) => {
+  try {
+    const { email }: PrivyUserData = req.body;
+
+    // Validate input
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Create or get user with email-only authentication
+    const result = await userService.createPrivyUser({ email });
+
+    res.json({
+      success: true,
+      message: 'Privy authentication successful',
+      data: {
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          hederaAccountId: result.user.hederaAccountId,
+          hederaPublicKey: result.user.hederaPublicKey,
+          privyId: result.user.privyId,
+          createdAt: result.user.createdAt
+        },
+        token: result.token
+      }
+    });
+  } catch (error) {
+    console.error('Privy authentication error:', error);
+    res.status(400).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Privy authentication failed'
+    });
+  }
+});
+
+// Get user wallet information
+router.get('/wallet', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided'
+      });
+    }
+
+    const decoded = userService.verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    const user = await userService.getUserById(decoded.userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Get wallet balance
+    const walletBalance = await userService.getUserWalletBalance(decoded.userId);
+
+    res.json({
+      success: true,
+      data: {
+        wallet: {
+          accountId: user.hederaAccountId,
+          publicKey: user.hederaPublicKey,
+          balance: walletBalance,
+          balanceInHbar: walletBalance / 100000000 // Convert tinybars to HBAR
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Wallet info error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to get wallet information'
     });
   }
 });

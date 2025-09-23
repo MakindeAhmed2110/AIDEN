@@ -31,7 +31,8 @@ export class DatabaseManager {
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
+        password_hash TEXT,
+        privy_id TEXT UNIQUE,
         hedera_account_id TEXT,
         hedera_private_key_encrypted TEXT,
         hedera_public_key TEXT,

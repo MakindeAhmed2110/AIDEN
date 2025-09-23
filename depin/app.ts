@@ -3,12 +3,12 @@ import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import { corsMiddleware } from './middleware/cors';
-import { generalLimiter, authLimiter, apiLimiter } from './middleware/rate-limit';
+import { generalLimiter, authLimiter, apiLimiter, healthLimiter } from './middleware/rate-limit';
 import authRoutes from './routes/auth';
 import depinRoutes from './routes/depin';
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: './env.local' });
 
 const app = express();
 const PORT = process.env.API_PORT || 3001;
@@ -27,8 +27,8 @@ app.use(generalLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health check endpoint
-app.get('/health', (req, res) => {
+// Health check endpoint (with more lenient rate limiting)
+app.get('/health', healthLimiter, (req, res) => {
   res.json({
     success: true,
     message: 'DePIN API is running',

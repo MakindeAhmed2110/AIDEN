@@ -1,6 +1,8 @@
 // Hedera Wallet Manager for DePIN System
 // Real Hedera SDK implementation
 
+import dotenv from 'dotenv';
+import crypto from 'crypto';
 import { 
   Client, 
   PrivateKey, 
@@ -11,6 +13,9 @@ import {
   TransferTransaction,
   TransactionReceipt
 } from '@hashgraph/sdk';
+
+// Load environment variables
+dotenv.config({ path: './env.local' });
 
 export interface HederaWallet {
   accountId: string;
@@ -30,16 +35,32 @@ export class HederaWalletManager {
     this.operatorId = process.env.HEDERA_OPERATOR_ID || '0.0.123456';
     this.operatorKey = process.env.HEDERA_OPERATOR_KEY || 'your_operator_private_key_here';
     
+    console.log('🔧 Hedera Wallet Manager Config:');
+    console.log('  Operator ID:', this.operatorId);
+    console.log('  Operator Key:', this.operatorKey ? `${this.operatorKey.substring(0, 10)}...` : 'NOT SET');
+    console.log('  Encryption Key:', this.encryptionKey ? `${this.encryptionKey.substring(0, 10)}...` : 'NOT SET');
+    
     // Initialize Hedera client for testnet
     this.client = Client.forTestnet();
     
     // Set operator credentials if available
     if (this.operatorKey !== 'your_operator_private_key_here') {
       try {
-        this.client.setOperator(AccountId.fromString(this.operatorId), PrivateKey.fromString(this.operatorKey));
+        // Handle different private key formats
+        let privateKey;
+        if (this.operatorKey.startsWith('0x')) {
+          // Remove 0x prefix and convert from hex
+          const hexKey = this.operatorKey.substring(2);
+          privateKey = PrivateKey.fromStringECDSA(hexKey);
+        } else {
+          privateKey = PrivateKey.fromString(this.operatorKey);
+        }
+        
+        this.client.setOperator(AccountId.fromString(this.operatorId), privateKey);
         console.log('🔗 Hedera client initialized with operator credentials');
       } catch (error) {
-        console.warn('⚠️ Could not set operator credentials, using client without operator');
+        console.warn('⚠️ Could not set operator credentials:', error.message);
+        console.log('🔗 Hedera client initialized (no operator credentials)');
       }
     } else {
       console.log('🔗 Hedera client initialized (no operator credentials)');
@@ -49,9 +70,13 @@ export class HederaWalletManager {
   // Create a new Hedera account for a user
   async createUserWallet(): Promise<HederaWallet> {
     try {
-      // Generate a new private key
+      console.log('🔑 Creating new Hedera wallet...');
+      
+      // Generate a new private key (ED25519 is preferred for Hedera)
       const privateKey = PrivateKey.generateED25519();
       const publicKey = privateKey.publicKey;
+      
+      console.log('  Generated new key pair');
       
       // Create account transaction
       const accountCreateTransaction = new AccountCreateTransaction()
@@ -59,6 +84,8 @@ export class HederaWalletManager {
         .setInitialBalance(Hbar.fromTinybars(1000)) // 1000 tinybars initial balance
         .setAccountMemo('AIDEN DePIN User Wallet');
 
+      console.log('  Submitting account creation transaction...');
+      
       // Execute the transaction
       const accountCreateResponse = await accountCreateTransaction.execute(this.client);
       const accountCreateReceipt = await accountCreateResponse.getReceipt(this.client);
@@ -71,7 +98,8 @@ export class HederaWalletManager {
       // Encrypt the private key for storage
       const encryptedPrivateKey = this.encryptPrivateKey(privateKey.toString());
 
-      console.log(`🔑 Created Hedera wallet: ${accountId}`);
+      console.log(`✅ Created real Hedera wallet: ${accountId}`);
+      console.log(`  Public Key: ${publicKey.toString()}`);
 
       return {
         accountId,
@@ -80,11 +108,74 @@ export class HederaWalletManager {
         encryptedPrivateKey
       };
     } catch (error) {
-      console.error('Error creating Hedera wallet:', error);
+      console.error('❌ Error creating Hedera wallet:', error);
       
       // Fallback to simulated wallet if Hedera fails
       console.log('🔄 Falling back to simulated wallet...');
       return this.createSimulatedWallet();
+    }
+  }
+
+  // Synchronous version for use in database transactions
+  createUserWalletSync(): HederaWallet {
+    try {
+      console.log('🔑 Creating new Hedera wallet (sync)...');
+      
+      // Generate a new private key (ED25519 is preferred for Hedera)
+      const privateKey = PrivateKey.generateED25519();
+      const publicKey = privateKey.publicKey;
+      
+      console.log('  Generated new key pair');
+      
+      // For synchronous version, we'll create the wallet structure but defer the actual Hedera transaction
+      // The actual account creation will happen asynchronously in the background
+      const accountId = `0.0.${Math.floor(Math.random() * 1000000)}`; // Temporary ID
+      const encryptedPrivateKey = this.encryptPrivateKey(privateKey.toString());
+
+      console.log(`✅ Created Hedera wallet structure: ${accountId}`);
+      console.log(`  Public Key: ${publicKey.toString()}`);
+
+      // Schedule the actual Hedera account creation asynchronously
+      this.createHederaAccountAsync(privateKey, publicKey, accountId);
+
+      return {
+        accountId,
+        privateKey: privateKey.toString(),
+        publicKey: publicKey.toString(),
+        encryptedPrivateKey
+      };
+    } catch (error) {
+      console.error('❌ Error creating Hedera wallet (sync):', error);
+      
+      // Fallback to simulated wallet if Hedera fails
+      console.log('🔄 Falling back to simulated wallet...');
+      return this.createSimulatedWallet();
+    }
+  }
+
+  // Asynchronously create the actual Hedera account
+  private async createHederaAccountAsync(privateKey: PrivateKey, publicKey: any, tempAccountId: string): Promise<void> {
+    try {
+      // Create account transaction
+      const accountCreateTransaction = new AccountCreateTransaction()
+        .setKey(publicKey)
+        .setInitialBalance(Hbar.fromTinybars(1000)) // 1000 tinybars initial balance
+        .setAccountMemo('AIDEN DePIN User Wallet');
+
+      console.log(`  Submitting account creation transaction for ${tempAccountId}...`);
+      
+      // Execute the transaction
+      const accountCreateResponse = await accountCreateTransaction.execute(this.client);
+      const accountCreateReceipt = await accountCreateResponse.getReceipt(this.client);
+      const realAccountId = accountCreateReceipt.accountId?.toString() || '';
+
+      if (realAccountId) {
+        console.log(`✅ Real Hedera account created: ${realAccountId} (was ${tempAccountId})`);
+        // TODO: Update the database with the real account ID
+        // This would require a callback or event system to update the user record
+      }
+    } catch (error) {
+      console.error(`❌ Error creating real Hedera account for ${tempAccountId}:`, error);
     }
   }
 
@@ -113,12 +204,11 @@ export class HederaWalletManager {
   // Encrypt private key for secure storage
   private encryptPrivateKey(privateKey: string): string {
     try {
-      const crypto = require('crypto');
       const algorithm = 'aes-256-gcm';
       const key = crypto.scryptSync(this.encryptionKey, 'salt', 32);
       const iv = crypto.randomBytes(16);
       
-      const cipher = crypto.createCipher(algorithm, key);
+      const cipher = crypto.createCipheriv(algorithm, key, iv);
       cipher.setAAD(Buffer.from('aiden-depin-wallet', 'utf8'));
       
       let encrypted = cipher.update(privateKey, 'utf8', 'hex');
@@ -136,7 +226,6 @@ export class HederaWalletManager {
   // Decrypt private key
   public decryptPrivateKey(encryptedPrivateKey: string): string {
     try {
-      const crypto = require('crypto');
       const algorithm = 'aes-256-gcm';
       const key = crypto.scryptSync(this.encryptionKey, 'salt', 32);
       
@@ -146,7 +235,7 @@ export class HederaWalletManager {
         const authTag = Buffer.from(parts[1], 'hex');
         const encrypted = parts[2];
         
-        const decipher = crypto.createDecipher(algorithm, key);
+        const decipher = crypto.createDecipheriv(algorithm, key, iv);
         decipher.setAAD(Buffer.from('aiden-depin-wallet', 'utf8'));
         decipher.setAuthTag(authTag);
         
