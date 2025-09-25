@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { userService, CreateUserData, LoginData, PrivyUserData } from '../services/user-service.js';
+import { userService, CreateUserData, LoginData, PrivyUserData } from '../services/user-service';
 
 const router = Router();
 

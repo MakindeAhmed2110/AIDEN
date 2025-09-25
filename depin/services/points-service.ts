@@ -1,4 +1,4 @@
-import { dbManager } from '../database/manager.js';
+import { dbManager } from '../database/manager';
 
 export interface UserPoints {
   id: number;

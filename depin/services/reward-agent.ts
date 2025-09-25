@@ -1,8 +1,8 @@
-import { dbManager } from '../database/manager.js';
-import { hederaWalletManager } from '../wallet/hedera-wallet.js';
-import { pointsService } from './points-service.js';
-import { userService } from './user-service.js';
-import { contractService } from './contract-service.js';
+import { dbManager } from '../database/manager';
+import { hederaWalletManager } from '../wallet/hedera-wallet';
+import { pointsService } from './points-service';
+import { userService } from './user-service';
+import { contractService } from './contract-service';
 import * as cron from 'node-cron';
 
 export interface RewardDistributionResult {

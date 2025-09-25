@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { userService } from '../services/user-service.js';
-import { depinService } from '../services/depin-service.js';
-import { pointsService } from '../services/points-service.js';
+import { userService } from '../services/user-service';
+import { depinService } from '../services/depin-service';
+import { pointsService } from '../services/points-service';
 
 const router = Router();
 

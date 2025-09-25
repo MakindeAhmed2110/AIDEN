@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
-import { dbManager } from '../database/manager.js';
-import { hederaWalletManager } from '../wallet/hedera-wallet.js';
-import { pointsService } from './points-service.js';
+import { dbManager } from '../database/manager';
+import { hederaWalletManager } from '../wallet/hedera-wallet';
+import { pointsService } from './points-service';
 
 export interface DePINNode {
   id: number;
