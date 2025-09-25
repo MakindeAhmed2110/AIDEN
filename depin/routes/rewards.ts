@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { rewardAgent } from '../services/reward-agent';
-import { userService } from '../services/user-service';
+import { rewardAgent } from '../services/reward-agent.js';
+import { userService } from '../services/user-service.js';
 
 const router = Router();
 

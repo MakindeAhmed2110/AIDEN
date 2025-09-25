@@ -9,9 +9,12 @@
     "build": "tsc",
     "start": "tsx app.ts",
     "start:prod": "node dist/app.js",
+    "start:render": "tsx app.ts",
     "test": "jest",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "postbuild": "cp -r middleware dist/ && cp -r routes dist/ && cp -r services dist/ && cp -r database dist/ && cp -r wallet dist/ && cp -r contracts dist/"
+
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.7.0",

@@ -2,12 +2,12 @@ import express from 'express';
 import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
-import { corsMiddleware } from './middleware/cors';
-import { generalLimiter, authLimiter, apiLimiter, healthLimiter } from './middleware/rate-limit';
-import authRoutes from './routes/auth';
-import depinRoutes from './routes/depin';
-import rewardRoutes from './routes/rewards';
-import { rewardAgent } from './services/reward-agent';
+import { corsMiddleware } from './middleware/cors.js';
+import { generalLimiter, authLimiter, apiLimiter, healthLimiter } from './middleware/rate-limit.js';
+import authRoutes from './routes/auth.js';
+import depinRoutes from './routes/depin.js';
+import rewardRoutes from './routes/rewards.js';
+import { rewardAgent } from './services/reward-agent.js';
 
 // Load environment variables
 dotenv.config({ path: './env.local' });

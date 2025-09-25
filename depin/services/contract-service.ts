@@ -11,8 +11,8 @@ import {
   ContractInfoQuery,
   TransferTransaction
 } from '@hashgraph/sdk';
-import rewardDistributorABI from '../contracts/RewardDistributor.json';
-import charityVaultABI from '../contracts/CharityVault.json';
+import rewardDistributorABI from '../contracts/RewardDistributor.json' assert { type: 'json' };
+import charityVaultABI from '../contracts/CharityVault.json' assert { type: 'json' };
 
 export interface ContractConfig {
   rewardDistributorAddress: string;

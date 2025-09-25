@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { dbManager } from '../database/manager';
-import { hederaWalletManager, HederaWallet } from '../wallet/hedera-wallet';
+import { dbManager } from '../database/manager.js';
+import { hederaWalletManager, HederaWallet } from '../wallet/hedera-wallet.js';
 
 export interface User {
   id: number;
