@@ -2,7 +2,7 @@
   "name": "aiden-depin",
   "version": "1.0.0",
   "description": "Aiden DePIN Proof-of-Bandwidth Protocol",
-  "main": "app.ts",
+  "main": "app.js",
   "type": "module",
   "scripts": {
     "dev": "tsx watch app.ts",
