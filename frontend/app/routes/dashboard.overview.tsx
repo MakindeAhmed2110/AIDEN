@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import { usePrivy } from '@privy-io/react-auth';
 import { apiService } from '../services/api';
+import CountUp from 'react-countup';
 
 // PolySans font family constant (using Neutral as requested)
 const polySansFont = '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif';
@@ -87,6 +88,98 @@ export default function Overview() {
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [measurementInterval, setMeasurementInterval] = useState<NodeJS.Timeout | null>(null);
   const [realtimeUpdateInterval, setRealtimeUpdateInterval] = useState<NodeJS.Timeout | null>(null);
+  const [backgroundSimulation, setBackgroundSimulation] = useState(false);
+
+  // Save simulation state to localStorage
+  const saveSimulationState = () => {
+    if (isConnected) {
+      const state = {
+        isConnected,
+        networkStats,
+        userPoints,
+        lastUpdate: Date.now(),
+        backgroundSimulation: true
+      };
+      localStorage.setItem('aiden_simulation_state', JSON.stringify(state));
+      console.log('💾 Simulation state saved to localStorage');
+    }
+  };
+
+  // Load simulation state from localStorage
+  const loadSimulationState = () => {
+    try {
+      const savedState = localStorage.getItem('aiden_simulation_state');
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        if (state.backgroundSimulation && state.isConnected) {
+          console.log('🔄 Resuming background simulation from localStorage');
+          setNetworkStats(state.networkStats);
+          setUserPoints(state.userPoints);
+          setBackgroundSimulation(true);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading simulation state:', error);
+    }
+    return false;
+  };
+
+  // Save simulation state periodically
+  useEffect(() => {
+    if (isConnected) {
+      const saveInterval = setInterval(saveSimulationState, 5000); // Save every 5 seconds
+      return () => clearInterval(saveInterval);
+    }
+  }, [isConnected, networkStats, userPoints]);
+
+  // Load simulation state on mount
+  useEffect(() => {
+    const hasBackgroundSimulation = loadSimulationState();
+    if (hasBackgroundSimulation) {
+      console.log('🔄 Resuming background simulation...');
+      setIsConnected(true);
+      // Resume the simulation
+      const realtimeInterval = setInterval(async () => {
+        console.log('⏰ Background simulation tick');
+        await simulateBandwidthMeasurement();
+      }, 2000);
+      setRealtimeUpdateInterval(realtimeInterval);
+    } else {
+      console.log('ℹ️ No background simulation found, user needs to connect manually');
+    }
+  }, []);
+
+  // Auto-connect for production (restored)
+  useEffect(() => {
+    if (authenticated && !isConnected && !isConnecting) {
+      console.log('🚀 Auto-connecting...', { authenticated, isConnected, isConnecting });
+      setTimeout(() => {
+        console.log('🚀 Executing auto-connect...');
+        handleConnectNetwork();
+      }, 2000); // Auto-connect after 2 seconds
+    }
+  }, [authenticated, isConnected, isConnecting]);
+
+  // Force start simulation for testing
+  useEffect(() => {
+    if (authenticated) {
+      console.log('🚀 Force starting simulation for testing...');
+      setTimeout(() => {
+        console.log('🚀 Setting connected state and starting simulation...');
+        setIsConnected(true);
+        const realtimeInterval = setInterval(async () => {
+          console.log('⏰ Force simulation tick -', new Date().toLocaleTimeString());
+          await simulateBandwidthMeasurement();
+        }, 2000);
+        setRealtimeUpdateInterval(realtimeInterval);
+        
+        // Start immediately
+        simulateBandwidthMeasurement();
+      }, 3000); // Start after 3 seconds
+    }
+  }, [authenticated]);
+
 
   // Check backend health and authenticate user
   useEffect(() => {
@@ -309,11 +402,21 @@ export default function Overview() {
       // Start real-time bandwidth measurements immediately
       console.log('🚀 Starting real-time measurements...');
       const realtimeInterval = setInterval(async () => {
-        console.log('⏰ Real-time measurement tick');
+        console.log('⏰ Real-time measurement tick -', new Date().toLocaleTimeString());
         await simulateBandwidthMeasurement();
       }, 2000); // Measure every 2 seconds for more visible updates
       
       setRealtimeUpdateInterval(realtimeInterval);
+      
+      // Also start immediately
+      console.log('🚀 Starting immediate measurement...');
+      setTimeout(() => {
+        simulateBandwidthMeasurement();
+      }, 1000);
+      
+      // Force start simulation immediately
+      console.log('🚀 Force starting simulation...');
+      await simulateBandwidthMeasurement();
       
       // Try backend connection if auth token is available
       if (authToken) {
@@ -396,6 +499,10 @@ export default function Overview() {
         // Send final sync to backend
         await syncFinalDataToBackend();
         
+        // Clear localStorage simulation state
+        localStorage.removeItem('aiden_simulation_state');
+        setBackgroundSimulation(false);
+        
         console.log('✅ Disconnected from DePIN network and synced final data');
       } else {
         throw new Error('Failed to disconnect from DePIN network');
@@ -421,16 +528,18 @@ export default function Overview() {
 
   // Simulate realistic bandwidth measurement and update backend
   const simulateBandwidthMeasurement = async () => {
-    console.log('🔄 simulateBandwidthMeasurement called:', { authToken: !!authToken, isConnected });
+    console.log('🔄 simulateBandwidthMeasurement called:', { 
+      authToken: !!authToken, 
+      isConnected, 
+      timestamp: new Date().toLocaleTimeString() 
+    });
     
-    if (!isConnected) {
-      console.log('❌ Skipping measurement - not connected');
-      return;
-    }
+    // Force simulation to run regardless of connection state for testing
+    console.log('✅ Starting measurement simulation (forced for testing)...');
 
     try {
-      // Simulate realistic bandwidth data
-      const dataServed = Math.random() * 100000 + 50000; // 50-150 KB per measurement
+      // Simulate realistic bandwidth data with more variation
+      const dataServed = Math.random() * 5000000 + 1000000; // 1-6 MB per measurement
       const downloadSpeed = Math.random() * 50 + 10; // 10-60 Mbps
       const uploadSpeed = Math.random() * 20 + 5; // 5-25 Mbps
       const latency = Math.random() * 50 + 10; // 10-60 ms
@@ -467,7 +576,7 @@ export default function Overview() {
           averageContributionUptime: (prevStats.averageContributionUptime + uptime) / 2,
           lastContributionTime: new Date().toISOString(),
           epochPoints: newPoints,
-          todayPoints: Math.floor(newPoints * 0.1)
+          todayPoints: prevStats.todayPoints + pointsEarned
         };
       });
 
@@ -483,7 +592,7 @@ export default function Overview() {
         return {
           ...prevPoints,
           totalEpochPoints: newTotalPoints,
-          todayPoints: Math.floor(newTotalPoints * 0.1),
+          todayPoints: prevPoints.todayPoints + pointsEarned,
           lastUpdated: new Date().toISOString()
         };
       });
@@ -631,8 +740,15 @@ export default function Overview() {
         >
           DePIN Proof-of-Bandwidth Protocol is actively measuring and logging bandwidth usage. 
           Last update: {new Date(lastUpdate).toLocaleTimeString()}
+          {backgroundSimulation && (
+            <Box component="span" sx={{ ml: 2, fontWeight: 'bold' }}>
+              🔄 Running in background
+            </Box>
+          )}
         </Alert>
       )}
+
+
 
       {/* Welcome Message */}
       <Card sx={{ 
@@ -728,7 +844,11 @@ export default function Overview() {
                         <StarIcon sx={{ fontSize: 28, color: '#f59e0b' }} />
                       </Box>
                       <Typography variant="h3" sx={{ fontWeight: 700, color: '#f59e0b', fontFamily: polySansFont }}>
-                        {userPoints ? userPoints.totalEpochPoints.toLocaleString() : '0'}
+                        <CountUp 
+                          end={userPoints ? userPoints.totalEpochPoints : 0} 
+                          duration={1} 
+                          separator=","
+                        />
                       </Typography>
                     </Box>
                     <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 1, fontFamily: polySansFont }}>
@@ -762,7 +882,11 @@ export default function Overview() {
                         <TrendingIcon sx={{ fontSize: 28, color: '#3b82f6' }} />
                       </Box>
                       <Typography variant="h3" sx={{ fontWeight: 700, color: '#3b82f6', fontFamily: polySansFont }}>
-                        {userPoints ? userPoints.todayPoints.toLocaleString() : '0'}
+                        <CountUp 
+                          end={userPoints ? userPoints.todayPoints : 0} 
+                          duration={0.5} 
+                          separator=","
+                        />
                       </Typography>
                     </Box>
                     <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 1, fontFamily: polySansFont }}>
@@ -826,7 +950,14 @@ export default function Overview() {
                           Data Served
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont, color: '#111827' }}>
-                          {formatBytes(networkStats.totalContributionBytes || networkStats.totalBytesServed)}
+                          <CountUp 
+                            end={networkStats.totalContributionBytes || networkStats.totalBytesServed} 
+                            duration={1} 
+                            separator="," 
+                            suffix=" bytes"
+                          />
+                          <br />
+                          <small>({formatBytes(networkStats.totalContributionBytes || networkStats.totalBytesServed)})</small>
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>
