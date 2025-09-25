@@ -7,258 +7,398 @@ import {
   CardContent, 
   Button,
   Grid,
-  Modal,
-  Fade,
-  Backdrop,
-  IconButton,
-  Chip,
   Alert,
-  CircularProgress,
-  LinearProgress
+  CircularProgress
 } from '@mui/material';
 import { 
   TrendingUp as TrendingIcon,
-  SmartToy as AIIcon,
   WifiOff as WifiOffIcon,
   Wifi as WifiIcon,
-  Download as DownloadIcon,
-  Close as CloseIcon,
-  Notifications as NotificationsIcon,
-  CheckCircle as CheckCircleIcon,
-  Storage as StorageIcon,
-  Timer as TimerIcon
+  Star as StarIcon
 } from '@mui/icons-material';
+import { usePrivy } from '@privy-io/react-auth';
+import { apiService } from '../services/api';
 
-// PolySans font family constant
-const polySansFont = '"PolySans Median", "PolySans Neutral", "Styrene A Web", "Helvetica Neue", Sans-Serif';
+// PolySans font family constant (using Neutral as requested)
+const polySansFont = '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif';
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Overview - AIDEN Dashboard" },
+    { title: "Dashboard - AIDEN" },
     { name: "description", content: "Your AIDEN dashboard overview" },
   ];
 }
 
-// Simulated DePIN System (in production, this would be imported from the backend)
-class SimulatedDePINSystem {
-  private isRunning = false;
-  private nodes = [
-    {
-      id: 'node-001',
-      name: 'Bandwidth Node Alpha',
-      location: 'US-East',
-      isActive: true,
-      totalBytesServed: 0,
-      totalUptime: 0,
-      lastActivity: Date.now(),
-      speedTestResults: {
-        downloadSpeed: 85.2,
-        uploadSpeed: 42.1,
-        latency: 12.5
-      }
-    },
-    {
-      id: 'node-002', 
-      name: 'Bandwidth Node Beta',
-      location: 'EU-West',
-      isActive: true,
-      totalBytesServed: 0,
-      totalUptime: 0,
-      lastActivity: Date.now(),
-      speedTestResults: {
-        downloadSpeed: 92.8,
-        uploadSpeed: 38.7,
-        latency: 8.3
-      }
-    },
-    {
-      id: 'node-003',
-      name: 'Bandwidth Node Gamma', 
-      location: 'Asia-Pacific',
-      isActive: true,
-      totalBytesServed: 0,
-      totalUptime: 0,
-      lastActivity: Date.now(),
-      speedTestResults: {
-        downloadSpeed: 78.5,
-        uploadSpeed: 35.2,
-        latency: 15.8
-      }
-    }
-  ];
+interface NetworkStats {
+  totalNodes: number;
+  activeNodes: number;
+  totalBytesServed: number;
+  totalGBServed: number;
+  averageUptime: number;
+  totalSessions: number;
+  totalContributions: number;
+  totalContributionBytes: number;
+  totalContributionGB: number;
+  averageDownloadSpeed: number;
+  averageUploadSpeed: number;
+  averageLatency: number;
+  averageContributionUptime: number;
+  lastContributionTime: string | null;
+  epochPoints: number; // Total points for the entire epoch
+  todayPoints: number; // Points earned today
+}
 
-  private usageLogs: any[] = [];
-  private interval: NodeJS.Timeout | null = null;
-
-  async connectNetwork() {
-    if (this.isRunning) {
-      return { success: false, message: 'DePIN system is already running' };
-    }
-    
-    this.isRunning = true;
-    
-    this.interval = setInterval(() => {
-      this.measureBandwidth();
-    }, 5000); // Measure every 5 seconds for demo
-    
-    console.log('🚀 DePIN Proof-of-Bandwidth Protocol started');
-    
-    // Wait a moment for initial measurements
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    return {
-      success: true,
-      message: 'Successfully connected to DePIN network',
-      data: this.getSystemStatus()
-    };
-  }
-
-  async disconnectNetwork() {
-    if (!this.isRunning) {
-      return { success: false, message: 'DePIN system is not running' };
-    }
-    
-    this.isRunning = false;
-    
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-    }
-    
-    console.log('⏹️ DePIN Proof-of-Bandwidth Protocol stopped');
-    
-    return {
-      success: true,
-      message: 'Successfully disconnected from DePIN network'
-    };
-  }
-
-  private measureBandwidth() {
-    this.nodes.forEach(node => {
-      if (node.isActive) {
-        const bytesServed = Math.floor(Math.random() * 500000) + 100000; // 100KB - 600KB
-        const uptime = Math.random() * 100;
-        
-        node.totalBytesServed += bytesServed;
-        node.totalUptime += uptime;
-        node.lastActivity = Date.now();
-        
-        // Simulate speed test variations
-        node.speedTestResults.downloadSpeed += (Math.random() - 0.5) * 5;
-        node.speedTestResults.uploadSpeed += (Math.random() - 0.5) * 3;
-        node.speedTestResults.latency += (Math.random() - 0.5) * 2;
-        
-        // Keep values realistic
-        node.speedTestResults.downloadSpeed = Math.max(50, Math.min(150, node.speedTestResults.downloadSpeed));
-        node.speedTestResults.uploadSpeed = Math.max(25, Math.min(75, node.speedTestResults.uploadSpeed));
-        node.speedTestResults.latency = Math.max(5, Math.min(30, node.speedTestResults.latency));
-
-        // Create usage proof
-        const usageProof = {
-          nodeId: node.id,
-          sessionId: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: Date.now(),
-          bytesServed,
-          uptime,
-          cryptographicProof: `proof-${Math.random().toString(36).substr(2, 16)}`,
-          hederaTransactionId: `0.0.${Math.floor(Math.random() * 1000000)}@${Date.now()}`
-        };
-
-        this.usageLogs.push(usageProof);
-        
-        // Keep only last 50 logs
-        if (this.usageLogs.length > 50) {
-          this.usageLogs = this.usageLogs.slice(-50);
-        }
-      }
-    });
-  }
-
-  getSystemStatus() {
-    const totalBytesServed = this.nodes.reduce((sum, node) => sum + node.totalBytesServed, 0);
-    const averageUptime = this.nodes.reduce((sum, node) => sum + node.totalUptime, 0) / this.nodes.length;
-    const activeNodes = this.nodes.filter(node => node.isActive).length;
-
-    return {
-      totalNodes: this.nodes.length,
-      activeNodes,
-      totalBytesServed,
-      totalGBServed: totalBytesServed / (1024 * 1024 * 1024),
-      averageUptime,
-      totalSessions: this.usageLogs.length,
-      isRunning: this.isRunning
-    };
-  }
-
-  getNodes() {
-    return this.nodes;
-  }
-
-  getUsageLogs() {
-    return this.usageLogs;
-  }
-
-  isSystemRunning() {
-    return this.isRunning;
-  }
+interface UserPoints {
+  totalEpochPoints: number;
+  todayPoints: number;
+  lastUpdated: string;
 }
 
 export default function Overview() {
-  const [comingSoonModalOpen, setComingSoonModalOpen] = useState(false);
-  const [depinSystem] = useState(() => new SimulatedDePINSystem());
+  const { user: privyUser, authenticated } = usePrivy();
+  const [networkStats, setNetworkStats] = useState<NetworkStats>({
+    totalNodes: 0,
+    activeNodes: 0,
+    totalBytesServed: 0,
+    totalGBServed: 0,
+    averageUptime: 0,
+    totalSessions: 0,
+    totalContributions: 0,
+    totalContributionBytes: 0,
+    totalContributionGB: 0,
+    averageDownloadSpeed: 0,
+    averageUploadSpeed: 0,
+    averageLatency: 0,
+    averageContributionUptime: 0,
+    lastContributionTime: null,
+    epochPoints: 0,
+    todayPoints: 0
+  });
+  const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [networkStats, setNetworkStats] = useState(depinSystem.getSystemStatus());
+  const [demoMode, setDemoMode] = useState(false);
+  const [backendConnected, setBackendConnected] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [measurementInterval, setMeasurementInterval] = useState<NodeJS.Timeout | null>(null);
+  const [realtimeUpdateInterval, setRealtimeUpdateInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Update data every second when connected
+  // Check backend health and authenticate user
   useEffect(() => {
-    if (!isConnected) return;
+    const initializeOverview = async () => {
+      if (!authenticated || !privyUser?.email?.address) {
+        setError('Please sign in to view your overview.');
+        return;
+      }
 
-    const interval = setInterval(() => {
-      setNetworkStats(depinSystem.getSystemStatus());
-      setLastUpdate(Date.now());
-    }, 1000);
+      // Prevent multiple simultaneous initialization attempts or re-initialization
+      if (isInitializing || hasInitialized) {
+        return;
+      }
 
-    return () => clearInterval(interval);
-  }, [isConnected, depinSystem]);
+      setIsInitializing(true);
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔄 Initializing overview for:', privyUser.email.address);
 
-  const handleComingSoonModalOpen = () => {
-    setComingSoonModalOpen(true);
+      try {
+        // Add a small delay to prevent rapid successive health checks
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if backend is available
+        console.log('🔍 Checking backend health...');
+        const isBackendHealthy = await apiService.checkHealth();
+        console.log('✅ Backend health check result:', isBackendHealthy);
+        
+        if (!isBackendHealthy) {
+          console.log('⚠️ Backend not available, using demo mode');
+          setDemoMode(true);
+          setBackendConnected(false);
+          // Use demo data
+          setUserPoints({
+            totalEpochPoints: 1250,
+            todayPoints: 45,
+            lastUpdated: new Date().toISOString()
+          });
+          
+          setNetworkStats({
+            totalNodes: 1,
+            activeNodes: 1,
+            totalBytesServed: 1250000000, // 1.25 GB
+            totalGBServed: 1.25,
+            averageUptime: 98.5,
+            totalSessions: 24,
+            totalContributions: 18,
+            totalContributionBytes: 1250000000,
+            totalContributionGB: 1.25,
+            averageDownloadSpeed: 45.2,
+            averageUploadSpeed: 8.7,
+            averageLatency: 23.1,
+            averageContributionUptime: 98.5,
+            lastContributionTime: new Date().toISOString(),
+            epochPoints: 1250,
+            todayPoints: 45
+          });
+          setLoading(false);
+          console.log('🎯 Demo mode initialized');
+          return;
+        }
+
+        // Backend is available, authenticate with email only
+        console.log('🔐 Authenticating with backend...');
+        const authResponse = await apiService.authenticateWithPrivy({
+          email: privyUser.email.address
+        });
+        console.log('🔐 Auth response:', authResponse);
+
+        if (authResponse.success && authResponse.data) {
+          console.log('✅ Authentication successful');
+          setAuthToken(authResponse.data.token);
+          setBackendConnected(true);
+          setDemoMode(false);
+
+          // Get points information
+          console.log('⭐ Getting points information...');
+          await fetchPointsData(authResponse.data.token);
+          
+          // Get network stats
+          console.log('📊 Getting network stats...');
+          await fetchNetworkStats(authResponse.data.token);
+          
+          console.log('✅ Overview data loaded successfully');
+        } else {
+          console.error('❌ Authentication failed:', authResponse.message);
+          setError('Failed to authenticate with backend. Using demo mode.');
+          setDemoMode(true);
+          setBackendConnected(false);
+        }
+      } catch (error) {
+        console.error('❌ Error initializing overview:', error);
+        setError('Failed to connect to backend. Using demo mode.');
+        setDemoMode(true);
+        setBackendConnected(false);
+      } finally {
+        console.log('🏁 Initialization complete, setting loading to false');
+        setLoading(false);
+        setIsInitializing(false);
+        setHasInitialized(true);
+      }
+    };
+
+    initializeOverview();
+  }, [authenticated, privyUser?.email?.address]);
+
+  const fetchPointsData = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:3001/api/depin/points', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data?.points) {
+          setUserPoints({
+            totalEpochPoints: data.data.points.totalEpochPoints,
+            todayPoints: data.data.points.todayPoints,
+            lastUpdated: data.data.points.lastUpdated
+          });
+          console.log('⭐ Points data fetched:', data.data.points);
+        }
+      } else {
+        console.error('Failed to fetch points data:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching points data:', error);
+    }
   };
 
-  const handleComingSoonModalClose = () => {
-    setComingSoonModalOpen(false);
+  const fetchNetworkStats = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:3001/api/depin/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data?.stats) {
+          setNetworkStats(prevStats => ({
+            ...prevStats,
+            ...data.data.stats,
+            ...data.data.contributionStats
+          }));
+          console.log('📊 Network stats fetched:', data.data.stats);
+        }
+      } else {
+        console.error('Failed to fetch network stats:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching network stats:', error);
+    }
+  };
+
+  const checkAndCreateNode = async (token: string) => {
+    try {
+      // First, check if user has any nodes
+      const nodesResponse = await fetch('http://localhost:3001/api/depin/nodes', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (nodesResponse.ok) {
+        const nodesData = await nodesResponse.json();
+        if (nodesData.success && nodesData.data?.nodes?.length > 0) {
+          console.log('✅ User has nodes:', nodesData.data.nodes.length);
+          return true;
+        }
+      }
+
+      // If no nodes, create one
+      console.log('🔄 No nodes found, creating a default node...');
+      const createResponse = await fetch('http://localhost:3001/api/depin/nodes', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'Main DePIN Node',
+          location: 'Global Network'
+        })
+      });
+
+      if (createResponse.ok) {
+        const createData = await createResponse.json();
+        console.log('✅ Node created successfully:', createData);
+        return true;
+      } else {
+        const errorData = await createResponse.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('❌ Failed to create node:', errorData);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error checking/creating nodes:', error);
+      return false;
+    }
   };
 
   const handleConnectNetwork = async () => {
     setIsConnecting(true);
+    setError(null);
+    
     try {
-      const result = await depinSystem.connectNetwork();
-      if (result.success) {
-        setIsConnected(true);
-        setNetworkStats(result.data);
-        console.log('✅ Connected to DePIN network:', result.message);
+      console.log('🔄 Attempting to connect to DePIN network...');
+      
+      // Always start frontend simulation regardless of backend status
+      setIsConnected(true);
+      console.log('✅ Frontend simulation started');
+      
+      // Start real-time bandwidth measurements immediately
+      console.log('🚀 Starting real-time measurements...');
+      const realtimeInterval = setInterval(async () => {
+        console.log('⏰ Real-time measurement tick');
+        await simulateBandwidthMeasurement();
+      }, 2000); // Measure every 2 seconds for more visible updates
+      
+      setRealtimeUpdateInterval(realtimeInterval);
+      
+      // Try backend connection if auth token is available
+      if (authToken) {
+        console.log('🔑 Using auth token:', authToken.substring(0, 20) + '...');
+        
+        try {
+          // First, ensure user has at least one node
+          const hasNodes = await checkAndCreateNode(authToken);
+          if (!hasNodes) {
+            console.log('⚠️ No nodes found, continuing with frontend simulation only');
+          }
+          
+          const response = await fetch('http://localhost:3001/api/depin/connect', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${authToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log('📡 Response status:', response.status);
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Backend connection successful:', data);
+            
+            // Start periodic backend updates
+            const interval = setInterval(async () => {
+              if (authToken) {
+                await fetchPointsData(authToken);
+                await fetchNetworkStats(authToken);
+                setLastUpdate(Date.now());
+              }
+            }, 5000); // Update every 5 seconds
+            
+            setMeasurementInterval(interval);
+          } else {
+            console.log('⚠️ Backend connection failed, continuing with frontend simulation only');
+          }
+        } catch (backendError) {
+          console.log('⚠️ Backend error, continuing with frontend simulation only:', backendError);
+        }
       } else {
-        console.error('❌ Failed to connect:', result.message);
+        console.log('⚠️ No auth token, using frontend simulation only');
       }
     } catch (error) {
       console.error('❌ Connection error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to connect to DePIN network');
     } finally {
       setIsConnecting(false);
     }
   };
 
   const handleDisconnectNetwork = async () => {
+    if (!authToken) return;
+
     setIsConnecting(true);
     try {
-      const result = await depinSystem.disconnectNetwork();
-      if (result.success) {
+      const response = await fetch('http://localhost:3001/api/depin/disconnect', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
         setIsConnected(false);
-        setNetworkStats(depinSystem.getSystemStatus());
-        console.log('✅ Disconnected from DePIN network:', result.message);
+        
+        // Stop all intervals
+        if (measurementInterval) {
+          clearInterval(measurementInterval);
+          setMeasurementInterval(null);
+        }
+        if (realtimeUpdateInterval) {
+          clearInterval(realtimeUpdateInterval);
+          setRealtimeUpdateInterval(null);
+        }
+        
+        // Send final sync to backend
+        await syncFinalDataToBackend();
+        
+        console.log('✅ Disconnected from DePIN network and synced final data');
       } else {
-        console.error('❌ Failed to disconnect:', result.message);
+        throw new Error('Failed to disconnect from DePIN network');
       }
     } catch (error) {
       console.error('❌ Disconnection error:', error);
@@ -279,8 +419,209 @@ export default function Overview() {
     return `${uptime.toFixed(1)}%`;
   };
 
+  // Simulate realistic bandwidth measurement and update backend
+  const simulateBandwidthMeasurement = async () => {
+    console.log('🔄 simulateBandwidthMeasurement called:', { authToken: !!authToken, isConnected });
+    
+    if (!isConnected) {
+      console.log('❌ Skipping measurement - not connected');
+      return;
+    }
+
+    try {
+      // Simulate realistic bandwidth data
+      const dataServed = Math.random() * 100000 + 50000; // 50-150 KB per measurement
+      const downloadSpeed = Math.random() * 50 + 10; // 10-60 Mbps
+      const uploadSpeed = Math.random() * 20 + 5; // 5-25 Mbps
+      const latency = Math.random() * 50 + 10; // 10-60 ms
+      const uptime = Math.random() * 5 + 95; // 95-100%
+
+      // Calculate points (1 point per MB served)
+      const pointsEarned = Math.floor(dataServed / (1024 * 1024));
+
+      console.log('📊 Simulating measurement:', { dataServed, pointsEarned });
+
+      // Update frontend state immediately
+      setNetworkStats(prevStats => {
+        const newBytesServed = prevStats.totalBytesServed + dataServed;
+        const newPoints = prevStats.epochPoints + pointsEarned;
+        
+        console.log('📈 Updating network stats:', { 
+          oldBytes: prevStats.totalBytesServed, 
+          newBytes: newBytesServed,
+          oldPoints: prevStats.epochPoints,
+          newPoints: newPoints
+        });
+        
+        return {
+          ...prevStats,
+          totalBytesServed: newBytesServed,
+          totalContributionBytes: newBytesServed,
+          totalGBServed: newBytesServed / (1024 * 1024 * 1024),
+          totalContributionGB: newBytesServed / (1024 * 1024 * 1024),
+          totalContributions: prevStats.totalContributions + 1,
+          averageDownloadSpeed: (prevStats.averageDownloadSpeed + downloadSpeed) / 2,
+          averageUploadSpeed: (prevStats.averageUploadSpeed + uploadSpeed) / 2,
+          averageLatency: (prevStats.averageLatency + latency) / 2,
+          averageUptime: (prevStats.averageUptime + uptime) / 2,
+          averageContributionUptime: (prevStats.averageContributionUptime + uptime) / 2,
+          lastContributionTime: new Date().toISOString(),
+          epochPoints: newPoints,
+          todayPoints: Math.floor(newPoints * 0.1)
+        };
+      });
+
+      setUserPoints(prevPoints => {
+        if (!prevPoints) return prevPoints;
+        
+        const newTotalPoints = prevPoints.totalEpochPoints + pointsEarned;
+        console.log('⭐ Updating user points:', { 
+          oldPoints: prevPoints.totalEpochPoints, 
+          newPoints: newTotalPoints 
+        });
+        
+        return {
+          ...prevPoints,
+          totalEpochPoints: newTotalPoints,
+          todayPoints: Math.floor(newTotalPoints * 0.1),
+          lastUpdated: new Date().toISOString()
+        };
+      });
+
+      // Try to send measurement to backend if auth token is available
+      if (authToken) {
+        const measurementData = {
+          dataServed: dataServed,
+          downloadSpeed: downloadSpeed,
+          uploadSpeed: uploadSpeed,
+          latency: latency,
+          uptime: uptime,
+          pointsEarned: pointsEarned
+        };
+
+        try {
+          const response = await fetch('http://localhost:3001/api/depin/measurement', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${authToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(measurementData)
+          });
+
+          if (response.ok) {
+            console.log('📊 Measurement sent to backend:', measurementData);
+          } else {
+            console.log('⚠️ Failed to send measurement to backend:', response.status);
+          }
+        } catch (backendError) {
+          console.log('⚠️ Backend error, continuing with frontend simulation:', backendError);
+        }
+      }
+
+      setLastUpdate(Date.now());
+    } catch (error) {
+      console.error('Error in bandwidth measurement:', error);
+    }
+  };
+
+  // Sync final data to backend when disconnecting
+  const syncFinalDataToBackend = async () => {
+    if (!authToken) return;
+
+    try {
+      const finalData = {
+        totalBytesServed: networkStats.totalBytesServed,
+        totalContributions: networkStats.totalContributions,
+        totalEpochPoints: userPoints?.totalEpochPoints || 0,
+        todayPoints: userPoints?.todayPoints || 0,
+        averageUptime: networkStats.averageUptime,
+        lastContributionTime: new Date().toISOString()
+      };
+
+      const response = await fetch('http://localhost:3001/api/depin/sync-final', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(finalData)
+      });
+
+      if (response.ok) {
+        console.log('✅ Final data synced to backend:', finalData);
+      } else {
+        console.error('Failed to sync final data to backend:', response.status);
+      }
+    } catch (error) {
+      console.error('Error syncing final data:', error);
+    }
+  };
+
+  // Cleanup intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (measurementInterval) {
+        clearInterval(measurementInterval);
+      }
+      if (realtimeUpdateInterval) {
+        clearInterval(realtimeUpdateInterval);
+      }
+    };
+  }, [measurementInterval, realtimeUpdateInterval]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (error && !demoMode) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => window.location.reload()}
+          sx={{ fontFamily: polySansFont }}
+        >
+          Retry
+        </Button>
+      </Box>
+    );
+  }
+
   return (
-    <>
+    <Box>
+      {demoMode && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="h6" sx={{ fontFamily: polySansFont, mb: 1 }}>
+            🎯 Demo Mode - Overview Preview
+          </Typography>
+          <Typography variant="body2">
+            {backendConnected 
+              ? 'Backend is connected but authentication failed. Using demo data.'
+              : 'Backend is not available. This shows what your overview will look like when connected.'
+            }
+          </Typography>
+        </Alert>
+      )}
+      
+      {backendConnected && !demoMode && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          <Typography variant="h6" sx={{ fontFamily: polySansFont, mb: 1 }}>
+            ✅ Backend Connected
+          </Typography>
+          <Typography variant="body2">
+            Your points are connected to the database. Real data is being displayed.
+          </Typography>
+        </Alert>
+      )}
+
       {/* DePIN Status Alert */}
       {isConnected && (
         <Alert 
@@ -295,84 +636,140 @@ export default function Overview() {
 
       {/* Welcome Message */}
       <Card sx={{ 
-        mb: 3, 
-        background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.1) 0%, rgba(160, 231, 229, 0.1) 100%)',
+        mb: 4, 
+        backgroundColor: '#3b82f6',
         border: 'none',
-        boxShadow: '0 4px 20px rgba(176, 136, 240, 0.1)',
         borderRadius: '16px',
-        backdropFilter: 'blur(10px)'
+        boxShadow: '0 4px 20px rgba(59, 130, 246, 0.15)',
+        '&:hover': {
+          boxShadow: '0 8px 30px rgba(59, 130, 246, 0.25)',
+          transition: 'all 0.3s ease-in-out'
+        }
       }}>
-        <CardContent sx={{ p: 3 }}>
+        <CardContent sx={{ p: 4 }}>
           <Typography variant="h6" sx={{ 
-            fontWeight: 600, 
-            color: '#1e3a8a', 
-            mb: 1,
-            fontFamily: polySansFont
+            fontWeight: 700, 
+            color: '#ffffff', 
+            mb: 2,
+            fontFamily: polySansFont,
+            fontSize: '1.25rem'
           }}>
-            Welcome to Epoch 1!
+            Welcome to Epoch 0!
           </Typography>
-          <Typography variant="body2" sx={{ 
-            color: '#666666',
-            fontFamily: polySansFont
+          <Typography variant="body1" sx={{ 
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontFamily: polySansFont,
+            lineHeight: 1.6
           }}>
             On the dashboard you will see your earnings for this epoch. To view your total number of points, 
-            simply navigate to the Rewards tab on the left.
+            simply navigate to the{' '}
+            <Typography 
+              component="span" 
+              sx={{ 
+                color: '#ffffff', 
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontFamily: polySansFont
+              }}
+            >
+              Rewards tab
+            </Typography>
+            {' '}on the left.
           </Typography>
         </CardContent>
       </Card>
 
       <Grid container spacing={3}>
-        {/* Earnings Card */}
-        <Grid size={{ xs: 12, md: 8 }}>
+        {/* Points Card */}
+        <Grid item xs={12} md={8}>
           <Card sx={{ 
             height: '100%',
+            backgroundColor: '#ffffff',
             border: 'none',
-            boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.08) 0%, rgba(160, 231, 229, 0.08) 100%)',
-            backdropFilter: 'blur(10px)'
+            borderRadius: '20px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            '&:hover': {
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+              transition: 'all 0.3s ease-in-out'
+            }
           }}>
             <CardContent sx={{ p: 4 }}>
               <Typography variant="h5" sx={{ 
                 fontWeight: 700, 
-                color: '#000000', 
-                mb: 3,
-                fontFamily: polySansFont
+                color: '#111827', 
+                mb: 4,
+                fontFamily: polySansFont,
+                fontSize: '1.5rem'
               }}>
                 Earnings
               </Typography>
               
               <Grid container spacing={4}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box sx={{ textAlign: 'center' }}>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ 
+                    textAlign: 'center',
+                    p: 3,
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '16px',
+                    border: '1px solid #e2e8f0',
+                    '&:hover': {
+                      backgroundColor: '#f1f5f9',
+                      transition: 'all 0.3s ease-in-out'
+                    }
+                  }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                      <TrendingIcon sx={{ fontSize: 32, color: '#1e3a8a', mr: 1 }} />
-                      <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e3a8a', fontFamily: polySansFont }}>
-                        {isConnected ? (networkStats.totalGBServed * 0.1).toFixed(3) : '0.00'}
+                      <Box sx={{ 
+                        p: 1.5, 
+                        borderRadius: '12px', 
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        mr: 2
+                      }}>
+                        <StarIcon sx={{ fontSize: 28, color: '#f59e0b' }} />
+                      </Box>
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: '#f59e0b', fontFamily: polySansFont }}>
+                        {userPoints ? userPoints.totalEpochPoints.toLocaleString() : '0'}
                       </Typography>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#000000', mb: 1, fontFamily: polySansFont }}>
-                      Epoch 1 Earnings
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 1, fontFamily: polySansFont }}>
+                      Epoch 0 Earning
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
-                      {isConnected ? `${formatUptime(networkStats.averageUptime)} uptime` : 'Uptime: 0 day, 0 hr, 0 min'}
+                    <Typography variant="body2" sx={{ color: '#6b7280', fontFamily: polySansFont }}>
+                      {`Uptime: ${formatUptime(networkStats.averageUptime)}`}
                     </Typography>
                   </Box>
                 </Grid>
                 
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box sx={{ textAlign: 'center', fontFamily: polySansFont }}>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ 
+                    textAlign: 'center',
+                    p: 3,
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '16px',
+                    border: '1px solid #e2e8f0',
+                    '&:hover': {
+                      backgroundColor: '#f1f5f9',
+                      transition: 'all 0.3s ease-in-out'
+                    }
+                  }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                      <TrendingIcon sx={{ fontSize: 32, color: '#1e3a8a', mr: 1 }} />
-                      <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e3a8a', fontFamily: polySansFont }}>
-                        {isConnected ? (networkStats.totalGBServed * 0.05).toFixed(3) : '0.00'}
+                      <Box sx={{ 
+                        p: 1.5, 
+                        borderRadius: '12px', 
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        mr: 2
+                      }}>
+                        <TrendingIcon sx={{ fontSize: 28, color: '#3b82f6' }} />
+                      </Box>
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: '#3b82f6', fontFamily: polySansFont }}>
+                        {userPoints ? userPoints.todayPoints.toLocaleString() : '0'}
                       </Typography>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#000000', mb: 1, fontFamily: polySansFont }}>
-                      Today's Earnings
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 1, fontFamily: polySansFont }}>
+                      Earned Today
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#666666' }}>
-                      {isConnected ? `${networkStats.activeNodes}/${networkStats.totalNodes} nodes active` : 'Uptime: 0 day, 0 hr, 0 min'}
+                    <Typography variant="body2" sx={{ color: '#6b7280', fontFamily: polySansFont }}>
+                      {`${networkStats.activeNodes}/${networkStats.totalNodes} nodes active`}
                     </Typography>
                   </Box>
                 </Grid>
@@ -382,82 +779,100 @@ export default function Overview() {
         </Grid>
 
         {/* Network Status Card */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <Card sx={{ 
             height: '100%',
+            backgroundColor: '#ffffff',
             border: 'none',
-            boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
-            borderRadius: '16px',
-            background: isConnected 
-              ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)'
-              : 'linear-gradient(135deg, rgba(176, 136, 240, 0.08) 0%, rgba(160, 231, 229, 0.08) 100%)',
-            backdropFilter: 'blur(10px)',
-            fontFamily: polySansFont
+            borderRadius: '20px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            '&:hover': {
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+              transition: 'all 0.3s ease-in-out'
+            }
           }}>
             <CardContent sx={{ p: 4, textAlign: 'center' }}>
               {isConnected ? (
                 <>
-                  <WifiIcon sx={{ fontSize: 48, color: '#059669', mb: 2 }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#059669', mb: 1, fontFamily: polySansFont }}>
+                  <Box sx={{ 
+                    p: 2, 
+                    borderRadius: '16px', 
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 3
+                  }}>
+                    <WifiIcon sx={{ fontSize: 40, color: '#10b981' }} />
+                  </Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#10b981', mb: 1, fontFamily: polySansFont }}>
                     Connected to DePIN
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#666666', mb: 2, fontFamily: polySansFont }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', mb: 3, fontFamily: polySansFont }}>
                     Proof-of-Bandwidth Protocol Active
                   </Typography>
                   
                   {/* Real-time stats */}
-                  <Box sx={{ mb: 3, p: 2, backgroundColor: 'rgba(255, 255, 255, 0.5)', borderRadius: '8px' }}>
-                    <Grid container spacing={1}>
-                      <Grid size={{ xs: 6 }}>
-                        <Typography variant="caption" sx={{ color: '#666666', fontFamily: polySansFont }}>
+                  <Box sx={{ 
+                    mb: 3, 
+                    p: 3, 
+                    backgroundColor: '#f8fafc', 
+                    borderRadius: '16px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" sx={{ color: '#6b7280', fontFamily: polySansFont, display: 'block', mb: 0.5 }}>
                           Data Served
                         </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont }}>
-                          {formatBytes(networkStats.totalBytesServed)}
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont, color: '#111827' }}>
+                          {formatBytes(networkStats.totalContributionBytes || networkStats.totalBytesServed)}
                         </Typography>
                       </Grid>
-                      <Grid size={{ xs: 6 }}>
-                        <Typography variant="caption" sx={{ color: '#666666', fontFamily: polySansFont }}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" sx={{ color: '#6b7280', fontFamily: polySansFont, display: 'block', mb: 0.5 }}>
                           Active Nodes
                         </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont, color: '#111827' }}>
                           {networkStats.activeNodes}/{networkStats.totalNodes}
                         </Typography>
                       </Grid>
-                      <Grid size={{ xs: 6 }}>
-                        <Typography variant="caption" sx={{ color: '#666666', fontFamily: polySansFont }}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" sx={{ color: '#6b7280', fontFamily: polySansFont, display: 'block', mb: 0.5 }}>
                           Avg Uptime
                         </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont, color: '#111827' }}>
                           {formatUptime(networkStats.averageUptime)}
                         </Typography>
                       </Grid>
-                      <Grid size={{ xs: 6 }}>
-                        <Typography variant="caption" sx={{ color: '#666666', fontFamily: polySansFont }}>
-                          Proofs
+                      <Grid item xs={6}>
+                        <Typography variant="caption" sx={{ color: '#6b7280', fontFamily: polySansFont, display: 'block', mb: 0.5 }}>
+                          Contributions
                         </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont }}>
-                          {networkStats.totalSessions}
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: polySansFont, color: '#111827' }}>
+                          {networkStats.totalContributions}
                         </Typography>
                       </Grid>
                     </Grid>
                   </Box>
 
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     fullWidth
                     onClick={handleDisconnectNetwork}
                     disabled={isConnecting}
                     sx={{
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
+                      borderColor: '#ef4444',
+                      color: '#ef4444',
                       py: 1.5,
                       fontSize: '1rem',
                       fontWeight: 600,
+                      fontFamily: polySansFont,
+                      borderRadius: '12px',
                       '&:hover': {
-                        backgroundColor: '#b91c1c',
-                      },
-                      fontFamily: polySansFont
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(239, 68, 68, 0.04)',
+                      }
                     }}
                   >
                     {isConnecting ? (
@@ -466,34 +881,45 @@ export default function Overview() {
                         Disconnecting...
                       </Box>
                     ) : (
-                      'DISCONNECT NETWORK'
+                      'Disconnect Network'
                     )}
                   </Button>
                 </>
               ) : (
                 <>
-                  <WifiOffIcon sx={{ fontSize: 48, color: '#dc2626', mb: 2 }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#dc2626', mb: 1, fontFamily: polySansFont }}>
-                    Not Connected
+                  <Box sx={{ 
+                    p: 2, 
+                    borderRadius: '16px', 
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 3
+                  }}>
+                    <WifiOffIcon sx={{ fontSize: 40, color: '#ef4444' }} />
+                  </Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#ef4444', mb: 1, fontFamily: polySansFont }}>
+                    • Not Connected
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#666666', mb: 3, fontFamily: polySansFont }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280', mb: 3, fontFamily: polySansFont }}>
                     You don't have any connected network currently.
                   </Typography>
                   <Button
                     variant="contained"
                     fullWidth
                     onClick={handleConnectNetwork}
-                    disabled={isConnecting}
+                    disabled={isConnecting || !authToken}
                     sx={{
-                      backgroundColor: '#1e3a8a',
+                      backgroundColor: '#3b82f6',
                       color: '#ffffff',
                       py: 1.5,
                       fontSize: '1rem',
                       fontWeight: 600,
+                      fontFamily: polySansFont,
+                      borderRadius: '12px',
                       '&:hover': {
-                        backgroundColor: '#1e40af',
-                      },
-                      fontFamily: polySansFont
+                        backgroundColor: '#2563eb',
+                      }
                     }}
                   >
                     {isConnecting ? (
@@ -502,7 +928,7 @@ export default function Overview() {
                         Connecting...
                       </Box>
                     ) : (
-                      'CONNECT NETWORK'
+                      'Connect Network'
                     )}
                   </Button>
                 </>
@@ -510,286 +936,98 @@ export default function Overview() {
             </CardContent>
           </Card>
         </Grid>
-
-        {/* AIDEN App Coming Soon Card */}
-        <Grid size={{ xs: 12 }}>
-          <Card sx={{ 
-            border: 'none',
-            boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.08) 0%, rgba(160, 231, 229, 0.08) 100%)',
-            backdropFilter: 'blur(10px)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <CardContent sx={{ p: 4, position: 'relative' }}>
-              {/* Slant Badge */}
-              <Box sx={{
-                position: 'absolute',
-                top: 20,
-                right: -20,
-                backgroundColor: '#1e3a8a',
-                color: '#ffffff',
-                px: 3,
-                py: 1,
-                transform: 'rotate(45deg)',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                fontFamily: polySansFont,
-                zIndex: 2,
-                boxShadow: '0 4px 12px rgba(30, 58, 138, 0.3)',
-                minWidth: '120px',
-                textAlign: 'center'
-              }}>
-                COMING SOON
-              </Box>
-
-              <Grid container spacing={4} alignItems="center">
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Box sx={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundImage: 'url(/illustrations/third.png)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                  </Box>
-                </Grid>
-                
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Box sx={{ position: 'relative' }}>
-                    <Box sx={{ 
-                      position: 'absolute', 
-                      top: -10, 
-                      right: 0,
-                      backgroundColor: '#1e3a8a',
-                      color: '#ffffff',
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: '12px',
-                      fontSize: '0.8rem',
-                      fontWeight: 600
-                    }}>
-                      2.00X
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <NotificationsIcon sx={{ fontSize: 32, color: '#1e3a8a', mr: 1 }} />
-                      <Typography variant="h5" sx={{ 
-                        fontWeight: 700, 
-                        color: '#000000',
-                        fontFamily: polySansFont
-                      }}>
-                        AIDEN APP COMING SOON!
-                      </Typography>
-                    </Box>
-                    
-                    <Typography variant="body2" sx={{ 
-                      color: '#333333', 
-                      mb: 3,
-                      fontFamily: polySansFont,
-                      lineHeight: 1.6
-                    }}>
-                      We're working hard to bring you the ultimate AIDEN mobile experience. 
-                      Get ready for seamless DePIN management, real-time earnings tracking, 
-                      and AI-powered insights right in your pocket!
-                    </Typography>
-                    
-                    <Button
-                      variant="contained"
-                      size="large"
-                      onClick={handleComingSoonModalOpen}
-                      startIcon={<NotificationsIcon />}
-                      sx={{
-                        backgroundColor: '#1e3a8a',
-                        color: '#ffffff',
-                        px: 4,
-                        py: 1.5,
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        mb: 2,
-                        borderRadius: '12px',
-                        '&:hover': {
-                          backgroundColor: '#1e40af',
-                        }
-                      }}
-                    >
-                      GET NOTIFIED
-                    </Button>
-                    
-                    <Typography variant="body2" sx={{ 
-                      color: '#333333',
-                      fontFamily: polySansFont
-                    }}>
-                      Be the first to know when we launch!
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
-
-      {/* Coming Soon Modal */}
-      <Modal
-        open={comingSoonModalOpen}
-        onClose={handleComingSoonModalClose}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-          sx: {
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(8px)'
-          }
-        }}
-      >
-        <Fade in={comingSoonModalOpen}>
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: { xs: '90%', sm: '400px' },
-              maxWidth: '90vw',
-              bgcolor: 'background.paper',
-              borderRadius: '24px',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-              p: 0,
-              outline: 'none',
-              background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.1) 0%, rgba(160, 231, 229, 0.1) 100%)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              overflow: 'hidden'
-            }}
-          >
-            {/* Modal Content */}
-            <Box sx={{ p: 0, position: 'relative' }}>
-              {/* Close Button */}
-              <IconButton 
-                onClick={handleComingSoonModalClose}
-                sx={{ 
-                  position: 'absolute',
-                  top: 16,
-                  right: 16,
-                  zIndex: 3,
-                  color: '#ffffff',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  '&:hover': { 
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    color: '#ffffff'
-                  }
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
-
-              {/* Hero Image Section */}
-              <Box sx={{
-                height: '250px',
-                backgroundImage: 'url(/illustrations/second.jpg)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Box sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.3) 0%, rgba(160, 231, 229, 0.3) 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" sx={{ 
-                      fontWeight: 700, 
-                      color: '#ffffff',
-                      fontFamily: polySansFont,
-                      mb: 1,
-                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-                    }}>
-                      COMING SOON
-                    </Typography>
-                    <Typography variant="body1" sx={{ 
-                      color: '#ffffff',
-                      fontFamily: polySansFont,
-                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-                    }}>
-                      AIDEN Mobile App
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              {/* Email Input Section */}
-              <Box sx={{ p: 3, textAlign: 'center' }}>
-                <Typography variant="body1" sx={{ 
-                  color: '#333333', 
-                  mb: 3,
-                  fontFamily: polySansFont,
-                  lineHeight: 1.6
-                }}>
-                  Want to be notified when we launch?
-                </Typography>
                 
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'center' }}>
-                  <Box sx={{ 
-                    flex: 1,
-                    maxWidth: '250px'
-                  }}>
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: '2px solid rgba(30, 58, 138, 0.2)',
-                        borderRadius: '12px',
-                        fontSize: '1rem',
-                        fontFamily: '"PolySans Median", "PolySans Neutral", "Styrene A Web", "Helvetica Neue", Sans-Serif',
-                        outline: 'none',
-                        backgroundColor: 'rgba(255, 255, 255, 0.8)'
-                      }}
-                    />
-                  </Box>
-                  <Button
-                    variant="contained"
-                    sx={{
-                      backgroundColor: '#1e3a8a',
-                      color: '#ffffff',
-                      px: 3,
-                      py: 1.5,
-                      borderRadius: '12px',
-                      fontWeight: 600,
-                      '&:hover': {
-                        backgroundColor: '#1e40af',
-                      }
-                    }}
-                  >
-                    Notify Me
-                  </Button>
-                </Box>
+      {/* Earning Statistics Section */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" sx={{ 
+          fontWeight: 700, 
+          color: '#111827', 
+          mb: 1,
+          fontFamily: polySansFont,
+          fontSize: '1.5rem'
+        }}>
+          Earning statistics
+        </Typography>
+        <Typography variant="body2" sx={{ 
+          color: '#6b7280', 
+          mb: 3,
+          fontFamily: polySansFont
+        }}>
+          Your revenue graph generated based on your bandwidth contributions
+        </Typography>
+                    
+        <Card sx={{ 
+          backgroundColor: '#ffffff',
+          border: 'none',
+          borderRadius: '20px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          '&:hover': {
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+            transition: 'all 0.3s ease-in-out'
+          }
+        }}>
+          <CardContent sx={{ p: 4 }}>
+            {/* Graph Placeholder */}
+            <Box sx={{
+              height: 300,
+              backgroundColor: '#f8fafc',
+              borderRadius: '16px',
+              border: '2px dashed #e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mb: 3,
+              position: 'relative'
+            }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <TrendingIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 2 }} />
+                <Typography variant="h6" sx={{ 
+                  color: '#94a3b8', 
+                  fontFamily: polySansFont,
+                  fontWeight: 500
+                }}>
+                  Revenue Graph
+                </Typography>
+                <Typography variant="body2" sx={{ 
+                  color: '#cbd5e1', 
+                  fontFamily: polySansFont
+                }}>
+                  Chart will appear here when data is available
+                </Typography>
               </Box>
             </Box>
-          </Box>
-        </Fade>
-      </Modal>
-    </>
+                
+            {/* Timeline */}
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              px: 2
+            }}>
+              {['Aug 25', 'Aug 27', 'Aug 29', 'Aug 31', 'Sep 02', 'Sep 04', 'Sep 06', 'Sep 08', 'Sep 10', 'Sep 12', 'Sep 14', 'Sep 16', 'Sep 18', 'Sep 20', 'Sep 22'].map((date, index) => (
+                <Box key={index} sx={{ textAlign: 'center', flex: 1 }}>
+                  <Typography variant="caption" sx={{ 
+                    color: '#6b7280', 
+                    fontFamily: polySansFont,
+                    display: 'block',
+                    mb: 0.5
+                  }}>
+                    0
+                  </Typography>
+                  <Typography variant="caption" sx={{ 
+                    color: '#9ca3af', 
+                    fontFamily: polySansFont,
+                    fontSize: '0.7rem'
+                  }}>
+                    {date}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   );
 }

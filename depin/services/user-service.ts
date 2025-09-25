@@ -314,6 +314,73 @@ export class UserService {
       throw new Error(`Failed to get wallet balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+
+  // Get user points (for reward system)
+  async getUserPoints(userId: number): Promise<{
+    todayPoints: number;
+    totalEpochPoints: number;
+    lastUpdated: Date;
+  }> {
+    try {
+      const points = this.db.prepare(`
+        SELECT today_points, total_epoch_points, last_updated
+        FROM user_points 
+        WHERE user_id = ?
+      `).get(userId) as any;
+
+      if (!points) {
+        return {
+          todayPoints: 0,
+          totalEpochPoints: 0,
+          lastUpdated: new Date()
+        };
+      }
+
+      return {
+        todayPoints: points.today_points || 0,
+        totalEpochPoints: points.total_epoch_points || 0,
+        lastUpdated: new Date(points.last_updated)
+      };
+    } catch (error) {
+      console.error('Error getting user points:', error);
+      throw new Error(`Failed to get user points: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Get leaderboard
+  async getLeaderboard(limit: number = 10): Promise<Array<{
+    userId: number;
+    email: string;
+    todayPoints: number;
+    totalEpochPoints: number;
+    potentialRewardHBAR: number;
+  }>> {
+    try {
+      const leaderboard = this.db.prepare(`
+        SELECT 
+          u.id as user_id,
+          u.email,
+          up.today_points,
+          up.total_epoch_points
+        FROM users u
+        JOIN user_points up ON u.id = up.user_id
+        WHERE u.is_active = 1
+        ORDER BY up.total_epoch_points DESC
+        LIMIT ?
+      `).all(limit) as any[];
+
+      return leaderboard.map(user => ({
+        userId: user.user_id,
+        email: user.email,
+        todayPoints: user.today_points || 0,
+        totalEpochPoints: user.total_epoch_points || 0,
+        potentialRewardHBAR: (user.today_points || 0) * 0.001 // 1MB = 0.001 HBAR
+      }));
+    } catch (error) {
+      console.error('Error getting leaderboard:', error);
+      throw new Error(`Failed to get leaderboard: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 }
 
 export const userService = new UserService();

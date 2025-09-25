@@ -81,6 +81,34 @@ export class DatabaseManager {
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       );
 
+      -- Bandwidth contributions table
+      CREATE TABLE IF NOT EXISTS bandwidth_contributions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        node_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        contribution_bytes INTEGER NOT NULL,
+        download_speed_mbps REAL NOT NULL,
+        upload_speed_mbps REAL NOT NULL,
+        latency_ms REAL NOT NULL,
+        uptime_percentage REAL NOT NULL,
+        test_duration_ms INTEGER NOT NULL,
+        contribution_timestamp DATETIME NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      );
+
+      -- User points table
+      CREATE TABLE IF NOT EXISTS user_points (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        total_epoch_points INTEGER DEFAULT 0,
+        today_points INTEGER DEFAULT 0,
+        last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      );
+
       -- Indexes for better performance
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
       CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(session_token);
@@ -88,6 +116,10 @@ export class DatabaseManager {
       CREATE INDEX IF NOT EXISTS idx_nodes_user_id ON depin_nodes(user_id);
       CREATE INDEX IF NOT EXISTS idx_proofs_user_id ON usage_proofs(user_id);
       CREATE INDEX IF NOT EXISTS idx_proofs_timestamp ON usage_proofs(timestamp);
+      CREATE INDEX IF NOT EXISTS idx_contributions_user_id ON bandwidth_contributions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_contributions_timestamp ON bandwidth_contributions(contribution_timestamp);
+      CREATE INDEX IF NOT EXISTS idx_contributions_node_id ON bandwidth_contributions(node_id);
+      CREATE INDEX IF NOT EXISTS idx_user_points_user_id ON user_points(user_id);
     `;
 
     this.db.exec(schema);

@@ -6,6 +6,8 @@ import { corsMiddleware } from './middleware/cors';
 import { generalLimiter, authLimiter, apiLimiter, healthLimiter } from './middleware/rate-limit';
 import authRoutes from './routes/auth';
 import depinRoutes from './routes/depin';
+import rewardRoutes from './routes/rewards';
+import { rewardAgent } from './services/reward-agent';
 
 // Load environment variables
 dotenv.config({ path: './env.local' });
@@ -40,6 +42,7 @@ app.get('/health', healthLimiter, (req, res) => {
 // API routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/depin', apiLimiter, depinRoutes);
+app.use('/api/rewards', apiLimiter, rewardRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -66,6 +69,11 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
   console.log(`🌐 DePIN endpoints: http://localhost:${PORT}/api/depin`);
+  console.log(`💰 Reward endpoints: http://localhost:${PORT}/api/rewards`);
+  
+  // Start the automated reward distribution agent
+  console.log('🤖 Starting automated reward distribution agent...');
+  rewardAgent.startAgent();
 });
 
 export default app;

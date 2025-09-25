@@ -24,12 +24,25 @@ export function Welcome() {
       <Box
         sx={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #B088F0 0%, #A0E7E5 100%)',
+          backgroundImage: 'url(/hero.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
           overflow: 'hidden',
-          pt: 0
+          pt: 0,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(255, 255, 255, 0.95)',
+            zIndex: 1
+          }
         }}
       >
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, px: { xs: 2, md: 3 } }}>
@@ -41,6 +54,7 @@ export function Welcome() {
                 <Typography
                   variant="h1"
                   sx={{
+                    fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
                     fontWeight: 700,
                     color: '#000000',
                     mb: 4,
@@ -49,14 +63,14 @@ export function Welcome() {
                     letterSpacing: '-0.02em'
                   }}
                 >
-                  Where DePIN meets
-                  AI empowerment!
+                  Decentralizing Power, Empowering Communities
                 </Typography>
 
                 {/* Body Paragraph */}
                 <Typography
                   variant="body1"
                   sx={{
+                    fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
                     color: '#000000',
                     mb: 6,
                     fontSize: { xs: '1rem', md: '1.1rem' },
@@ -66,10 +80,7 @@ export function Welcome() {
                     mx: { xs: 'auto', md: 0 }
                   }}
                 >
-                  We're a revolutionary DePIN platform that turns your idle device resources into 
-                  passive income, automated savings, and charitable impact. From AI-powered resource 
-                  optimization to transparent on-chain charity distribution, AIDEN delivers smart, 
-                  user-friendly solutions that empower everyone—from tech enthusiasts to impact investors.
+                  Get rewarded for your unused internet, and computer resources by powering the AI revolution.
                 </Typography>
 
                 {/* Call-to-Action Buttons */}
@@ -85,6 +96,7 @@ export function Welcome() {
                     size="large"
                     onClick={handleGetStarted}
                     sx={{
+                      fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
                       px: { xs: 3, md: 4 },
                       py: 2,
                       fontSize: { xs: '0.9rem', md: '1rem' },
@@ -97,12 +109,13 @@ export function Welcome() {
                       }
                     }}
                   >
-                    {ready && authenticated ? 'Go to Dashboard' : 'Get Started'}
+                    {ready && authenticated ? 'Go to Dashboard' : 'Start earning now (~ 30s)'}
                   </Button>
                   
                   <Typography 
                     variant="body1" 
                     sx={{ 
+                      fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
                       fontWeight: 500,
                       color: '#000000',
                       cursor: 'pointer',
@@ -112,39 +125,84 @@ export function Welcome() {
                       }
                     }}
                   >
-                    Explore our platform →
+                    Learn more about DePIN →
+                  </Typography>
+                </Box>
+
+                {/* Social Proof Section */}
+                <Box sx={{ 
+                  mt: 4, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 2,
+                  justifyContent: { xs: 'center', md: 'flex-start' }
+                }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: -1,
+                    '& > div': {
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      border: '2px solid #ffffff',
+                      backgroundColor: '#e0e0e0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      color: '#666666'
+                    }
+                  }}>
+                    <Box>👤</Box>
+                    <Box sx={{ ml: -1 }}>👤</Box>
+                    <Box sx={{ ml: -1 }}>👤</Box>
+                  </Box>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
+                      fontWeight: 500,
+                      color: '#666666',
+                      fontSize: { xs: '0.8rem', md: '0.9rem' }
+                    }}
+                  >
+                    100k+ users around the world
                   </Typography>
                 </Box>
               </Box>
             </Grid>
 
-            {/* Right Side - Illustrations */}
+            {/* Right Side - Hero Image */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Box
                 sx={{
                   display: 'flex',
+                  flexDirection: 'column',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: { xs: '400px', md: '700px' },
+                  height: { xs: '800px', md: '700px' },
                   position: 'relative'
                 }}
               >
-                {/* Main Illustration - first.png */}
+                {/* Hero Image */}
                 <Box
                   sx={{
                     position: 'relative',
                     zIndex: 3,
                     maxWidth: { xs: '300px', md: '500px' },
-                    width: '100%'
+                    width: '100%',
+                    mb: 4
                   }}
                 >
                   <img
-                    src="/illustrations/first.png"
+                    src="/hero.jpg"
                     alt="AIDEN DePIN Network"
                     style={{
                       width: '100%',
-                      height: 'auto',
-                      objectFit: 'contain'
+                      height: '500px',
+                      objectFit: 'contain',
+                      borderRadius: '12px'
                     }}
                   />
                 </Box>

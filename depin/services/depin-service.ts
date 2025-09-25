@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { dbManager } from '../database/manager';
 import { hederaWalletManager } from '../wallet/hedera-wallet';
+import { pointsService } from './points-service';
 
 export interface DePINNode {
   id: number;
@@ -159,7 +160,49 @@ export class DePINService {
       // Create usage proof
       const usageProof = await this.createUsageProof(userId, metrics);
       
-      console.log(`📊 Measured bandwidth for node ${nodeId}: ${(metrics.bytesServed / 1024 / 1024).toFixed(2)}MB served`);
+      // Store bandwidth contribution in the new table
+      const storeContribution = this.db.prepare(`
+        INSERT INTO bandwidth_contributions (
+          user_id, node_id, session_id, contribution_bytes,
+          download_speed_mbps, upload_speed_mbps, latency_ms,
+          uptime_percentage, test_duration_ms, contribution_timestamp
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      const testDuration = Date.now() - metrics.timestamp;
+      storeContribution.run(
+        userId,
+        nodeId,
+        metrics.sessionId,
+        metrics.bytesServed,
+        metrics.speedTest.downloadSpeed,
+        metrics.speedTest.uploadSpeed,
+        metrics.speedTest.latency,
+        metrics.uptime,
+        testDuration,
+        new Date(metrics.timestamp).toISOString()
+      );
+      
+      // Calculate and store points
+      const pointsEarned = Math.floor(metrics.bytesServed / (1024 * 1024)); // 1 point per MB
+      
+      // Add points to user's account
+      if (pointsEarned > 0) {
+        await pointsService.addPoints(userId, pointsEarned);
+        console.log(`⭐ Points added to user account: ${pointsEarned} points`);
+      }
+
+      // Enhanced console logging
+      console.log(`🚀 [DePIN] Bandwidth measurement completed for node ${nodeId}:`);
+      console.log(`   📊 Data served: ${(metrics.bytesServed / 1024 / 1024).toFixed(2)} MB`);
+      console.log(`   ⭐ Points earned: ${pointsEarned} (1 point per MB)`);
+      console.log(`   ⬇️  Download speed: ${metrics.speedTest.downloadSpeed.toFixed(2)} Mbps`);
+      console.log(`   ⬆️  Upload speed: ${metrics.speedTest.uploadSpeed.toFixed(2)} Mbps`);
+      console.log(`   🏓 Latency: ${metrics.speedTest.latency.toFixed(1)} ms`);
+      console.log(`   ⏱️  Uptime: ${metrics.uptime.toFixed(1)}%`);
+      console.log(`   🆔 Session ID: ${metrics.sessionId}`);
+      console.log(`   💾 Stored in bandwidth_contributions table`);
+      console.log(`   💾 Points stored in user_points table`);
       
       return metrics;
     } catch (error) {
@@ -338,13 +381,42 @@ export class DePINService {
         WHERE user_id = ?
       `).get(userId) as any;
 
+      // Get total bandwidth contributions from the new table
+      const contributionStats = this.db.prepare(`
+        SELECT 
+          COUNT(*) as totalContributions,
+          SUM(contribution_bytes) as totalContributionBytes,
+          AVG(download_speed_mbps) as averageDownloadSpeed,
+          AVG(upload_speed_mbps) as averageUploadSpeed,
+          AVG(latency_ms) as averageLatency,
+          AVG(uptime_percentage) as averageContributionUptime,
+          MAX(contribution_timestamp) as lastContributionTime
+        FROM bandwidth_contributions 
+        WHERE user_id = ?
+      `).get(userId) as any;
+
+      // Get user points
+      const userPoints = await pointsService.getUserPoints(userId);
+
       return {
         totalNodes: stats.totalNodes || 0,
         activeNodes: stats.activeNodes || 0,
         totalBytesServed: stats.totalBytesServed || 0,
         totalGBServed: (stats.totalBytesServed || 0) / (1024 * 1024 * 1024),
         averageUptime: stats.averageUptime || 0,
-        totalSessions: proofCount.totalSessions || 0
+        totalSessions: proofCount.totalSessions || 0,
+        // New contribution data
+        totalContributions: contributionStats.totalContributions || 0,
+        totalContributionBytes: contributionStats.totalContributionBytes || 0,
+        totalContributionGB: (contributionStats.totalContributionBytes || 0) / (1024 * 1024 * 1024),
+        averageDownloadSpeed: Math.round((contributionStats.averageDownloadSpeed || 0) * 100) / 100,
+        averageUploadSpeed: Math.round((contributionStats.averageUploadSpeed || 0) * 100) / 100,
+        averageLatency: Math.round((contributionStats.averageLatency || 0) * 100) / 100,
+        averageContributionUptime: Math.round((contributionStats.averageContributionUptime || 0) * 100) / 100,
+        lastContributionTime: contributionStats.lastContributionTime,
+        // Points data
+        epochPoints: userPoints.totalEpochPoints,
+        todayPoints: userPoints.todayPoints
       };
     } catch (error) {
       console.error('Error getting network stats:', error);
@@ -352,9 +424,233 @@ export class DePINService {
     }
   }
 
+  // Get epoch-specific earnings for a user
+  async getEpochEarnings(userId: number, epochNumber: number = 1) {
+    try {
+      // Get all contributions for the specified epoch
+      // For now, we'll consider all contributions as part of epoch 1
+      const epochStats = this.db.prepare(`
+        SELECT 
+          COUNT(*) as totalContributions,
+          SUM(contribution_bytes) as totalBytes,
+          AVG(download_speed_mbps) as avgDownloadSpeed,
+          AVG(upload_speed_mbps) as avgUploadSpeed,
+          AVG(uptime_percentage) as avgUptime,
+          MIN(contribution_timestamp) as epochStart,
+          MAX(contribution_timestamp) as epochEnd
+        FROM bandwidth_contributions 
+        WHERE user_id = ?
+      `).get(userId) as any;
+
+      // Calculate earnings based on contribution (1 point per MB)
+      const totalMB = (epochStats.totalBytes || 0) / (1024 * 1024);
+      const epochEarnings = totalMB; // 1 point per MB
+
+      return {
+        epochNumber,
+        totalContributions: epochStats.totalContributions || 0,
+        totalBytes: epochStats.totalBytes || 0,
+        totalMB: Math.round(totalMB * 100) / 100, // Round to 2 decimal places
+        totalGB: Math.round((totalMB / 1024) * 1000) / 1000, // Also provide GB for compatibility
+        epochEarnings: Math.round(epochEarnings * 100) / 100, // Points earned (1 point per MB)
+        avgDownloadSpeed: Math.round((epochStats.avgDownloadSpeed || 0) * 100) / 100,
+        avgUploadSpeed: Math.round((epochStats.avgUploadSpeed || 0) * 100) / 100,
+        avgUptime: Math.round((epochStats.avgUptime || 0) * 100) / 100,
+        epochStart: epochStats.epochStart,
+        epochEnd: epochStats.epochEnd
+      };
+    } catch (error) {
+      console.error('Error getting epoch earnings:', error);
+      throw new Error(`Failed to get epoch earnings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Get user contribution statistics
+  async getUserContributionStats(userId: number) {
+    try {
+      const contributionStats = this.db.prepare(`
+        SELECT 
+          COUNT(*) as totalContributions,
+          SUM(contribution_bytes) as totalContributionBytes,
+          AVG(download_speed_mbps) as averageDownloadSpeed,
+          AVG(upload_speed_mbps) as averageUploadSpeed,
+          AVG(latency_ms) as averageLatency,
+          AVG(uptime_percentage) as averageContributionUptime,
+          MAX(contribution_timestamp) as lastContributionTime,
+          MIN(contribution_timestamp) as firstContributionTime
+        FROM bandwidth_contributions 
+        WHERE user_id = ?
+      `).get(userId) as any;
+
+      return {
+        totalContributions: contributionStats.totalContributions || 0,
+        totalContributionBytes: contributionStats.totalContributionBytes || 0,
+        totalContributionGB: (contributionStats.totalContributionBytes || 0) / (1024 * 1024 * 1024),
+        averageDownloadSpeed: Math.round((contributionStats.averageDownloadSpeed || 0) * 100) / 100,
+        averageUploadSpeed: Math.round((contributionStats.averageUploadSpeed || 0) * 100) / 100,
+        averageLatency: Math.round((contributionStats.averageLatency || 0) * 100) / 100,
+        averageContributionUptime: Math.round((contributionStats.averageContributionUptime || 0) * 100) / 100,
+        lastContributionTime: contributionStats.lastContributionTime,
+        firstContributionTime: contributionStats.firstContributionTime
+      };
+    } catch (error) {
+      console.error('Error getting user contribution stats:', error);
+      throw new Error(`Failed to get user contribution stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Get last session data for a user
+  async getLastSessionData(userId: number) {
+    try {
+      const lastSession = this.db.prepare(`
+        SELECT 
+          contribution_timestamp,
+          contribution_bytes,
+          download_speed_mbps,
+          upload_speed_mbps,
+          latency_ms,
+          uptime_percentage,
+          test_duration_ms
+        FROM bandwidth_contributions 
+        WHERE user_id = ? 
+        ORDER BY contribution_timestamp DESC 
+        LIMIT 1
+      `).get(userId) as any;
+
+      if (!lastSession) {
+        return null;
+      }
+
+      return {
+        lastContributionTime: new Date(lastSession.contribution_timestamp),
+        lastContributionBytes: lastSession.contribution_bytes,
+        lastDownloadSpeed: lastSession.download_speed_mbps,
+        lastUploadSpeed: lastSession.upload_speed_mbps,
+        lastLatency: lastSession.latency_ms,
+        lastUptime: lastSession.uptime_percentage,
+        lastTestDuration: lastSession.test_duration_ms
+      };
+    } catch (error) {
+      console.error('Error getting last session data:', error);
+      throw new Error(`Failed to get last session data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
   // Generate unique session ID
   private generateSessionId(): string {
     return `session-${Date.now()}-${uuidv4().substring(0, 8)}`;
+  }
+
+  // Store real-time measurement from frontend
+  async storeMeasurement(userId: number, measurement: {
+    dataServed: number;
+    downloadSpeed: number;
+    uploadSpeed: number;
+    latency: number;
+    uptime: number;
+    pointsEarned: number;
+  }) {
+    try {
+      const { dataServed, downloadSpeed, uploadSpeed, latency, uptime, pointsEarned } = measurement;
+
+      // Insert measurement into bandwidth_contributions table
+      await this.db.prepare(`
+        INSERT INTO bandwidth_contributions (
+          user_id, 
+          node_id, 
+          data_served, 
+          download_speed, 
+          upload_speed, 
+          latency, 
+          uptime, 
+          points_earned, 
+          created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        userId,
+        'frontend-simulation', // Use a special node ID for frontend measurements
+        dataServed,
+        downloadSpeed,
+        uploadSpeed,
+        latency,
+        uptime,
+        pointsEarned,
+        new Date().toISOString()
+      );
+
+      // Update user points
+      await this.db.prepare(`
+        UPDATE user_points 
+        SET 
+          total_epoch_points = total_epoch_points + ?,
+          today_points = today_points + ?,
+          last_updated = ?
+        WHERE user_id = ?
+      `).run(
+        pointsEarned,
+        pointsEarned,
+        new Date().toISOString(),
+        userId
+      );
+
+      console.log(`📊 Stored measurement for user ${userId}: ${dataServed} bytes, ${pointsEarned} points`);
+    } catch (error) {
+      console.error('Error storing measurement:', error);
+      throw new Error(`Failed to store measurement: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Update user's final stats when disconnecting
+  async updateUserFinalStats(userId: number, finalStats: {
+    totalBytesServed: number;
+    totalContributions: number;
+    totalEpochPoints: number;
+    todayPoints: number;
+    averageUptime: number;
+    lastContributionTime: string;
+  }) {
+    try {
+      const { totalBytesServed, totalContributions, totalEpochPoints, todayPoints, averageUptime, lastContributionTime } = finalStats;
+
+      // Update user points with final values
+      await this.db.prepare(`
+        UPDATE user_points 
+        SET 
+          total_epoch_points = ?,
+          today_points = ?,
+          last_updated = ?
+        WHERE user_id = ?
+      `).run(
+        totalEpochPoints,
+        todayPoints,
+        new Date().toISOString(),
+        userId
+      );
+
+      // Update network stats
+      await this.db.prepare(`
+        UPDATE network_stats 
+        SET 
+          total_bytes_served = ?,
+          total_contributions = ?,
+          average_uptime = ?,
+          last_contribution_time = ?,
+          updated_at = ?
+        WHERE user_id = ?
+      `).run(
+        totalBytesServed,
+        totalContributions,
+        averageUptime,
+        lastContributionTime,
+        new Date().toISOString(),
+        userId
+      );
+
+      console.log(`✅ Updated final stats for user ${userId}: ${totalBytesServed} bytes, ${totalEpochPoints} points`);
+    } catch (error) {
+      console.error('Error updating final stats:', error);
+      throw new Error(`Failed to update final stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
 

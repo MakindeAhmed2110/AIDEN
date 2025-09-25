@@ -25,13 +25,26 @@ export default function NavBar() {
       position='fixed' 
       elevation={0}
       sx={{ 
-        background: 'linear-gradient(135deg, #B088F0 0%, #A0E7E5 100%)',
+        backgroundImage: 'url(/hero.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         color: '#000000',
         boxShadow: 'none',
-        zIndex: 1000
+        zIndex: 1000,
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(255, 255, 255, 0.95)',
+          zIndex: 1
+        }
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
         <Toolbar 
           sx={{ 
             py: { xs: 1, md: 2 },
@@ -39,14 +52,25 @@ export default function NavBar() {
             minHeight: { xs: '60px', md: '80px' }
           }}
         >
-          {/* Logo Section */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+         
+                 {/* Logo Section */}
+                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <img
+              src="/logo.jpg"
+              alt="AIDEN Logo"
+              style={{
+                width: '50px',
+                height: '50px',
+                objectFit: 'contain'
+              }}
+            />
             <Typography 
               variant="h3" 
               sx={{ 
-                fontWeight: 700,
+                fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
+                fontWeight: 600,
                 color: '#000000',
-                fontSize: { xs: '1.8rem', md: '2.5rem' },
+                fontSize: { xs: '1.2rem', md: '2.0rem' },
                 lineHeight: 1
               }}
             >
@@ -61,43 +85,31 @@ export default function NavBar() {
             alignItems: 'center', 
             gap: 4 
           }}>
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                color: '#666666',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: 400,
-                '&:hover': { color: '#000000' }
-              }}
-            >
-              Careers
-            </Typography>
-            
             {ready && authenticated ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Button
                   variant='outlined'
                   onClick={() => navigate('/dashboard/overview')}
                   sx={{
-                    borderColor: '#000000',
-                    color: '#000000',
+                    borderColor: '#3b82f6',
+                    color: '#3b82f6',
                     borderRadius: '8px',
                     px: 3,
                     py: 1.5,
                     fontSize: '1rem',
                     fontWeight: 500,
                     textTransform: 'none',
+                    fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
                     '&:hover': {
-                      borderColor: '#333333',
-                      backgroundColor: 'rgba(0,0,0,0.04)',
+                      borderColor: '#2563eb',
+                      backgroundColor: 'rgba(59, 130, 246, 0.04)',
                     }
                   }}
                 >
                   Dashboard
                 </Button>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar sx={{ bgcolor: '#000000', width: 32, height: 32 }}>
+                  <Avatar sx={{ bgcolor: '#3b82f6', width: 32, height: 32 }}>
                     {user?.email?.address?.charAt(0).toUpperCase() || 'U'}
                   </Avatar>
                   <Button
@@ -108,6 +120,7 @@ export default function NavBar() {
                       fontSize: '0.9rem',
                       fontWeight: 400,
                       textTransform: 'none',
+                      fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
                       '&:hover': { color: '#000000' }
                     }}
                   >
@@ -120,7 +133,7 @@ export default function NavBar() {
                 variant='contained'
                 onClick={handleLogin}
                 sx={{
-                  backgroundColor: '#000000',
+                  backgroundColor: '#3b82f6',
                   color: '#ffffff',
                   borderRadius: '8px',
                   px: 3,
@@ -128,8 +141,9 @@ export default function NavBar() {
                   fontSize: '1rem',
                   fontWeight: 500,
                   textTransform: 'none',
+                  fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
                   '&:hover': {
-                    backgroundColor: '#333333',
+                    backgroundColor: '#2563eb',
                   }
                 }}
               >
@@ -167,17 +181,6 @@ export default function NavBar() {
             }
           }}
         >
-          <MenuItem 
-            onClick={() => setMobileMenuOpen(false)}
-            sx={{ 
-              fontSize: '1rem',
-              fontWeight: 500,
-              color: '#666666',
-              '&:hover': { color: '#000000' }
-            }}
-          >
-            Careers
-          </MenuItem>
           {ready && authenticated ? (
             <>
               <MenuItem 
@@ -188,7 +191,8 @@ export default function NavBar() {
                 sx={{ 
                   fontSize: '1rem',
                   fontWeight: 500,
-                  color: '#000000'
+                  color: '#000000',
+                  fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
                 }}
               >
                 Dashboard
@@ -201,7 +205,8 @@ export default function NavBar() {
                 sx={{ 
                   fontSize: '1rem',
                   fontWeight: 500,
-                  color: '#666666'
+                  color: '#666666',
+                  fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
                 }}
               >
                 Logout
@@ -216,7 +221,8 @@ export default function NavBar() {
               sx={{ 
                 fontSize: '1rem',
                 fontWeight: 500,
-                color: '#000000'
+                color: '#000000',
+                fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
               }}
             >
               Get Started

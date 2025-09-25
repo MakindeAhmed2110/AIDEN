@@ -42,8 +42,8 @@ import {
   Wifi as ConnectivityIcon
 } from '@mui/icons-material';
 
-// PolySans font family constant
-const polySansFont = '"PolySans Median", "PolySans Neutral", "Styrene A Web", "Helvetica Neue", Sans-Serif';
+// PolySans font family constant (using Neutral as requested)
+const polySansFont = '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -61,22 +61,25 @@ export default function Charity() {
 
   const charityStats = [
     {
-      icon: <TrendingIcon sx={{ fontSize: 40, color: '#1e3a8a' }} />,
+      icon: <TrendingIcon sx={{ fontSize: 40, color: '#3b82f6' }} />,
       title: "Total Donated",
       value: "2,450.75 HBAR",
-      description: "Lifetime charitable contributions"
+      description: "Lifetime charitable contributions",
+      gradient: "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)"
     },
     {
-      icon: <PeopleIcon sx={{ fontSize: 40, color: '#1e3a8a' }} />,
+      icon: <PeopleIcon sx={{ fontSize: 40, color: '#10b981' }} />,
       title: "Lives Impacted",
       value: "1,250",
-      description: "People helped through donations"
+      description: "People helped through donations",
+      gradient: "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)"
     },
     {
-      icon: <SchoolIcon sx={{ fontSize: 40, color: '#1e3a8a' }} />,
+      icon: <SchoolIcon sx={{ fontSize: 40, color: '#8b5cf6' }} />,
       title: "Projects Funded",
       value: "15",
-      description: "Community development projects"
+      description: "Community development projects",
+      gradient: "linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)"
     }
   ];
 
@@ -222,19 +225,30 @@ export default function Charity() {
       <Card sx={{ 
         mb: 4,
         border: 'none', 
-        boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
-        borderRadius: '16px',
-        background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)',
-        backdropFilter: 'blur(10px)'
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+        borderRadius: '20px',
+        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+        backdropFilter: 'blur(10px)',
+        '&:hover': {
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+          transition: 'all 0.3s ease-in-out'
+        }
       }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <VaultIcon sx={{ fontSize: 40, color: '#1e3a8a', mr: 2 }} />
+            <Box sx={{ 
+              p: 2, 
+              borderRadius: '12px', 
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              mr: 2 
+            }}>
+              <VaultIcon sx={{ fontSize: 40, color: '#3b82f6' }} />
+            </Box>
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e3a8a', fontFamily: polySansFont }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827', fontFamily: polySansFont }}>
                 Hedera Charity Vault
               </Typography>
-              <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontFamily: polySansFont }}>
                 Transparent and decentralized charity fund management
               </Typography>
             </Box>
@@ -242,23 +256,38 @@ export default function Charity() {
           
           <Box sx={{ 
             p: 3, 
-            backgroundColor: 'rgba(30, 58, 138, 0.05)', 
-            borderRadius: '12px',
-            border: '1px solid rgba(30, 58, 138, 0.1)'
+            backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+            borderRadius: '16px',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
+            backdropFilter: 'blur(10px)'
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3a8a', fontFamily: polySansFont }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', fontFamily: polySansFont }}>
                 Vault Address
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Tooltip title="Copy address">
-                  <IconButton onClick={handleCopyVaultAddress} size="small">
-                    <CopyIcon sx={{ color: '#1e3a8a' }} />
+                  <IconButton 
+                    onClick={handleCopyVaultAddress} 
+                    size="small"
+                    sx={{ 
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                      '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.2)' }
+                    }}
+                  >
+                    <CopyIcon sx={{ color: '#3b82f6' }} />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="View on Hashscan">
-                  <IconButton onClick={handleOpenVaultExplorer} size="small">
-                    <ExternalLinkIcon sx={{ color: '#1e3a8a' }} />
+                  <IconButton 
+                    onClick={handleOpenVaultExplorer} 
+                    size="small"
+                    sx={{ 
+                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.2)' }
+                    }}
+                  >
+                    <ExternalLinkIcon sx={{ color: '#10b981' }} />
                   </IconButton>
                 </Tooltip>
               </Box>
@@ -268,16 +297,17 @@ export default function Charity() {
               fontFamily: 'monospace', 
               backgroundColor: 'rgba(0,0,0,0.05)', 
               p: 2, 
-              borderRadius: '8px',
-              color: '#1e3a8a',
-              fontWeight: 600
+              borderRadius: '12px',
+              color: '#111827',
+              fontWeight: 600,
+              border: '1px solid rgba(0,0,0,0.1)'
             }}>
               {vaultAddress}
             </Typography>
             
             <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, gap: 1 }}>
               <CheckCircleIcon sx={{ color: '#10b981', fontSize: 20 }} />
-              <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontFamily: polySansFont }}>
                 Verified smart contract on Hedera Testnet
               </Typography>
             </Box>
@@ -292,27 +322,35 @@ export default function Charity() {
             <Card sx={{ 
               height: '100%', 
               border: 'none', 
-              boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
               borderRadius: '16px',
-              background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.08) 0%, rgba(160, 231, 229, 0.08) 100%)',
+              background: stat.gradient,
               backdropFilter: 'blur(10px)',
               '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 8px 30px rgba(176, 136, 240, 0.25)',
+                transform: 'translateY(-4px)',
+                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
                 transition: 'all 0.3s ease-in-out'
               }
             }}>
               <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{ 
+                  mb: 2,
+                  p: 2,
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
                   {stat.icon}
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e3a8a', mb: 1, fontFamily: polySansFont }}>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: '#111827', mb: 1, fontFamily: polySansFont }}>
                   {stat.value}
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#000000', mb: 1, fontFamily: polySansFont }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#374151', mb: 1, fontFamily: polySansFont }}>
                   {stat.title}
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
+                <Typography variant="body2" sx={{ color: '#6b7280', fontFamily: polySansFont }}>
                   {stat.description}
                 </Typography>
               </CardContent>
@@ -325,19 +363,30 @@ export default function Charity() {
       <Card sx={{ 
         mb: 4,
         border: 'none', 
-        boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
-        borderRadius: '16px',
-        background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.08) 0%, rgba(160, 231, 229, 0.08) 100%)',
-        backdropFilter: 'blur(10px)'
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+        borderRadius: '20px',
+        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)',
+        backdropFilter: 'blur(10px)',
+        '&:hover': {
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+          transition: 'all 0.3s ease-in-out'
+        }
       }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <SecurityIcon sx={{ fontSize: 40, color: '#1e3a8a', mr: 2 }} />
+            <Box sx={{ 
+              p: 2, 
+              borderRadius: '12px', 
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              mr: 2 
+            }}>
+              <SecurityIcon sx={{ fontSize: 40, color: '#8b5cf6' }} />
+            </Box>
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e3a8a', fontFamily: polySansFont }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827', fontFamily: polySansFont }}>
                 Charity Solutions
               </Typography>
-              <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontFamily: polySansFont }}>
                 Comprehensive solutions addressing critical community needs
               </Typography>
             </Box>
@@ -346,18 +395,24 @@ export default function Charity() {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {charitySolutions.map((category, index) => (
               <Accordion key={index} sx={{ 
-                border: '1px solid rgba(30, 58, 138, 0.1)',
-                borderRadius: '12px !important',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                borderRadius: '16px !important',
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(10px)',
                 '&:before': { display: 'none' },
                 '&.Mui-expanded': {
                   margin: '0 0 8px 0'
+                },
+                '&:hover': {
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.3s ease-in-out'
                 }
               }}>
                 <AccordionSummary
-                  expandIcon={<ExpandMoreIcon sx={{ color: '#1e3a8a' }} />}
+                  expandIcon={<ExpandMoreIcon sx={{ color: '#8b5cf6' }} />}
                   sx={{ 
-                    backgroundColor: 'rgba(30, 58, 138, 0.05)',
-                    borderRadius: '12px',
+                    backgroundColor: 'transparent',
+                    borderRadius: '16px',
                     '&.Mui-expanded': {
                       borderBottomLeftRadius: 0,
                       borderBottomRightRadius: 0
@@ -365,8 +420,17 @@ export default function Charity() {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    {category.icon}
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3a8a', fontFamily: polySansFont }}>
+                    <Box sx={{ 
+                      p: 1, 
+                      borderRadius: '8px', 
+                      backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {category.icon}
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', fontFamily: polySansFont }}>
                       {category.category}
                     </Typography>
                   </Box>
@@ -396,7 +460,7 @@ export default function Charity() {
       </Card>
 
       {/* Active Projects */}
-      <Typography variant="h5" sx={{ fontWeight: 700, color: '#000000', mb: 3, fontFamily: polySansFont }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827', mb: 3, fontFamily: polySansFont }}>
         Active Projects
       </Typography>
       <Grid container spacing={3}>
@@ -404,44 +468,57 @@ export default function Charity() {
           <Grid size={{ xs: 12, md: 6 }} key={index}>
             <Card sx={{ 
               border: 'none', 
-              boxShadow: '0 4px 20px rgba(176, 136, 240, 0.15)',
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, rgba(176, 136, 240, 0.08) 0%, rgba(160, 231, 229, 0.08) 100%)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)',
               backdropFilter: 'blur(10px)',
               '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 8px 30px rgba(176, 136, 240, 0.25)',
+                transform: 'translateY(-4px)',
+                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
                 transition: 'all 0.3s ease-in-out'
               }
             }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <CharityIcon sx={{ fontSize: 32, color: '#1e3a8a', mr: 2 }} />
+                  <Box sx={{ 
+                    p: 1.5, 
+                    borderRadius: '12px', 
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    mr: 2 
+                  }}>
+                    <CharityIcon sx={{ fontSize: 32, color: '#10b981' }} />
+                  </Box>
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#000000', fontFamily: polySansFont }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', fontFamily: polySansFont }}>
                       {project.name}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#666666', fontFamily: polySansFont }}>
+                    <Typography variant="body2" sx={{ color: '#6b7280', fontFamily: polySansFont }}>
                       {project.amount} donated
                     </Typography>
                   </Box>
                 </Box>
-                <Typography variant="body2" sx={{ color: '#666666', mb: 2, fontFamily: polySansFont }}>
+                <Typography variant="body2" sx={{ color: '#6b7280', mb: 2, fontFamily: polySansFont }}>
                   {project.description}
                 </Typography>
                 <Box sx={{ mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#666666', mb: 1, fontFamily: polySansFont }}>
-                    Progress: {project.progress}%
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#6b7280', fontFamily: polySansFont }}>
+                      Progress
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600, fontFamily: polySansFont }}>
+                      {project.progress}%
+                    </Typography>
+                  </Box>
                   <LinearProgress 
                     variant="determinate" 
                     value={project.progress} 
                     sx={{ 
                       height: 8, 
-                      borderRadius: 4,
-                      backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                      borderRadius: 8,
+                      backgroundColor: 'rgba(0, 0, 0, 0.1)',
                       '& .MuiLinearProgress-bar': {
-                        backgroundColor: '#1e3a8a'
+                        backgroundColor: '#10b981',
+                        borderRadius: 8
                       }
                     }} 
                   />

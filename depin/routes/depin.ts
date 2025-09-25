@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { userService } from '../services/user-service';
 import { depinService } from '../services/depin-service';
+import { pointsService } from '../services/points-service';
 
 const router = Router();
 
@@ -230,16 +231,59 @@ router.get('/stats', authenticateToken, async (req: Request, res: Response): Pro
     }
 
     const stats = await depinService.getUserNetworkStats(userId);
+    const contributionStats = await depinService.getUserContributionStats(userId);
+    const epochEarnings = await depinService.getEpochEarnings(userId, 1);
+    const lastSessionData = await depinService.getLastSessionData(userId);
 
     res.json({
       success: true,
-      data: { stats }
+      data: { 
+        stats,
+        contributionStats,
+        epochEarnings,
+        lastSessionData
+      }
     });
   } catch (error) {
     console.error('Get stats error:', error);
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get network statistics'
+    });
+  }
+});
+
+// Get user points
+router.get('/points', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+      return;
+    }
+
+    const userPoints = await pointsService.getUserPoints(userId);
+
+    res.json({
+      success: true,
+      message: 'User points retrieved successfully',
+      data: { 
+        points: {
+          totalEpochPoints: userPoints.totalEpochPoints,
+          todayPoints: userPoints.todayPoints,
+          lastUpdated: userPoints.lastUpdated
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get points error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to get user points'
     });
   }
 });
@@ -292,6 +336,154 @@ router.post('/connect', authenticateToken, async (req: Request, res: Response): 
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to connect to network'
+    });
+  }
+});
+
+// Handle real-time measurement from frontend
+router.post('/measurement', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+    const { dataServed, downloadSpeed, uploadSpeed, latency, uptime, pointsEarned } = req.body;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+      return;
+    }
+
+    // Store the measurement in the database
+    await depinService.storeMeasurement(userId, {
+      dataServed,
+      downloadSpeed,
+      uploadSpeed,
+      latency,
+      uptime,
+      pointsEarned
+    });
+
+    res.json({
+      success: true,
+      message: 'Measurement stored successfully',
+      data: {
+        dataServed,
+        pointsEarned,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Store measurement error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to store measurement'
+    });
+  }
+});
+
+// Sync final data when disconnecting
+router.post('/sync-final', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+    const { totalBytesServed, totalContributions, totalEpochPoints, todayPoints, averageUptime, lastContributionTime } = req.body;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+      return;
+    }
+
+    // Update user's final stats
+    await depinService.updateUserFinalStats(userId, {
+      totalBytesServed,
+      totalContributions,
+      totalEpochPoints,
+      todayPoints,
+      averageUptime,
+      lastContributionTime
+    });
+
+    res.json({
+      success: true,
+      message: 'Final data synced successfully',
+      data: {
+        totalBytesServed,
+        totalContributions,
+        totalEpochPoints,
+        todayPoints,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Sync final data error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to sync final data'
+    });
+  }
+});
+
+// Get epoch earnings for a user
+router.get('/epoch-earnings/:epochNumber?', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+    const epochNumber = parseInt(req.params.epochNumber) || 1;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+      return;
+    }
+
+    const epochEarnings = await depinService.getEpochEarnings(userId, epochNumber);
+
+    res.json({
+      success: true,
+      message: `Epoch ${epochNumber} earnings retrieved successfully`,
+      data: { epochEarnings }
+    });
+  } catch (error) {
+    console.error('Get epoch earnings error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to get epoch earnings'
+    });
+  }
+});
+
+// Get last session data for a user
+router.get('/last-session', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+      return;
+    }
+
+    const lastSessionData = await depinService.getLastSessionData(userId);
+
+    res.json({
+      success: true,
+      message: 'Last session data retrieved successfully',
+      data: { 
+        lastSessionData,
+        hasSessionData: lastSessionData !== null
+      }
+    });
+  } catch (error) {
+    console.error('Get last session error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to get last session data'
     });
   }
 });
