@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch app.ts",
     "build": "tsc",
-    "start": "tsx app.ts",
+    "start": "node app.js",
     "start:prod": "node dist/app.js",
     "start:render": "tsx app.ts",
     "test": "jest",
