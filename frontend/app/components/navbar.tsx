@@ -1,8 +1,9 @@
-import { AppBar, Button, Toolbar, Typography, Box, Container, IconButton, Menu, MenuItem, Avatar } from '@mui/material';
+import { AppBar, Button, Toolbar, Typography, Box, Container, IconButton, Menu, MenuItem, Avatar, Drawer, List, ListItem, ListItemButton, ListItemText, Divider } from '@mui/material';
 import { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useNavigate } from 'react-router';
 import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 
 export default function NavBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -165,70 +166,177 @@ export default function NavBar() {
           </IconButton>
         </Toolbar>
 
-        {/* Mobile Menu */}
-        <Menu
-          anchorEl={null}
+        {/* Mobile Drawer */}
+        <Drawer
+          anchor="right"
           open={mobileMenuOpen}
           onClose={() => setMobileMenuOpen(false)}
           sx={{
             display: { xs: 'block', md: 'none' },
-            '& .MuiPaper-root': {
+            '& .MuiDrawer-paper': {
+              width: '280px',
               backgroundColor: '#ffffff',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-              borderRadius: '12px',
-              mt: 1,
-              minWidth: '200px'
+              boxShadow: '-4px 0 20px rgba(0,0,0,0.1)',
             }
           }}
         >
-          {ready && authenticated ? (
-            <>
-              <MenuItem 
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigate('/dashboard/overview');
-                }}
+          <Box sx={{ p: 3 }}>
+            {/* Header with close button */}
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              mb: 3
+            }}>
+              <Typography 
+                variant="h6" 
                 sx={{ 
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  color: '#000000',
-                  fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
+                  fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
+                  fontWeight: 600,
+                  color: '#000000'
                 }}
               >
-                Dashboard
-              </MenuItem>
-              <MenuItem 
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleLogout();
-                }}
-                sx={{ 
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  color: '#666666',
-                  fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
-                }}
+                Menu
+              </Typography>
+              <IconButton 
+                onClick={() => setMobileMenuOpen(false)}
+                sx={{ color: '#666666' }}
               >
-                Logout
-              </MenuItem>
-            </>
-          ) : (
-            <MenuItem 
-              onClick={() => {
-                setMobileMenuOpen(false);
-                handleLogin();
-              }}
-              sx={{ 
-                fontSize: '1rem',
-                fontWeight: 500,
-                color: '#000000',
-                fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
-              }}
-            >
-              Get Started
-            </MenuItem>
-          )}
-        </Menu>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+
+            {/* User info if authenticated */}
+            {ready && authenticated && (
+              <Box sx={{ mb: 3, p: 2, backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: '#3b82f6', width: 40, height: 40 }}>
+                    {user?.email?.address?.charAt(0).toUpperCase() || 'U'}
+                  </Avatar>
+                  <Box>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontWeight: 500,
+                        color: '#000000',
+                        fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
+                      }}
+                    >
+                      {user?.email?.address || 'User'}
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: '#666666',
+                        fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
+                      }}
+                    >
+                      Connected
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+
+            {/* Navigation items */}
+            <List sx={{ p: 0 }}>
+              {ready && authenticated ? (
+                <>
+                  <ListItem sx={{ p: 0, mb: 1 }}>
+                    <ListItemButton
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        navigate('/dashboard/overview');
+                      }}
+                      sx={{
+                        borderRadius: '8px',
+                        py: 1.5,
+                        px: 2,
+                        '&:hover': {
+                          backgroundColor: '#f8fafc'
+                        }
+                      }}
+                    >
+                      <ListItemText 
+                        primary="Dashboard"
+                        sx={{
+                          '& .MuiListItemText-primary': {
+                            fontSize: '1rem',
+                            fontWeight: 500,
+                            color: '#000000',
+                            fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
+                          }
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                  
+                  <Divider sx={{ my: 2 }} />
+                  
+                  <ListItem sx={{ p: 0 }}>
+                    <ListItemButton
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      sx={{
+                        borderRadius: '8px',
+                        py: 1.5,
+                        px: 2,
+                        '&:hover': {
+                          backgroundColor: '#fef2f2'
+                        }
+                      }}
+                    >
+                      <ListItemText 
+                        primary="Logout"
+                        sx={{
+                          '& .MuiListItemText-primary': {
+                            fontSize: '1rem',
+                            fontWeight: 500,
+                            color: '#dc2626',
+                            fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
+                          }
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                </>
+              ) : (
+                <ListItem sx={{ p: 0 }}>
+                  <ListItemButton
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogin();
+                    }}
+                    sx={{
+                      borderRadius: '8px',
+                      py: 1.5,
+                      px: 2,
+                      backgroundColor: '#3b82f6',
+                      color: '#ffffff',
+                      '&:hover': {
+                        backgroundColor: '#2563eb'
+                      }
+                    }}
+                  >
+                    <ListItemText 
+                      primary="Get Started"
+                      sx={{
+                        '& .MuiListItemText-primary': {
+                          fontSize: '1rem',
+                          fontWeight: 500,
+                          color: '#ffffff',
+                          fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif'
+                        }
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              )}
+            </List>
+          </Box>
+        </Drawer>
       </Container>
     </AppBar>
   )

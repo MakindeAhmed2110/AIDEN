@@ -23,7 +23,7 @@ export function Welcome() {
       {/* Hero Section */}
       <Box
         sx={{
-          minHeight: '100vh',
+          minHeight: { xs: 'calc(100vh - 80px)', md: '100vh' },
           backgroundImage: 'url(/hero.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -32,7 +32,7 @@ export function Welcome() {
           alignItems: 'center',
           position: 'relative',
           overflow: 'hidden',
-          pt: 0,
+          pt: { xs: 2, md: 0 },
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -46,7 +46,7 @@ export function Welcome() {
         }}
       >
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, px: { xs: 2, md: 3 } }}>
-          <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center" sx={{ minHeight: { xs: '70vh', md: '80vh' } }}>
+          <Grid container spacing={{ xs: 2, md: 8 }} alignItems="center" sx={{ minHeight: { xs: 'auto', md: '80vh' } }}>
             {/* Left Side - Text Content */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ maxWidth: '600px', pr: { md: 4 }, textAlign: { xs: 'center', md: 'left' } }}>
@@ -72,7 +72,7 @@ export function Welcome() {
                   sx={{
                     fontFamily: '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif',
                     color: '#000000',
-                    mb: 6,
+                    mb: { xs: 4, md: 6 },
                     fontSize: { xs: '1rem', md: '1.1rem' },
                     lineHeight: 1.6,
                     maxWidth: '520px',
@@ -181,8 +181,9 @@ export function Welcome() {
                   flexDirection: 'column',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: { xs: '800px', md: '700px' },
-                  position: 'relative'
+                  height: { xs: 'auto', md: '700px' },
+                  position: 'relative',
+                  py: { xs: 2, md: 0 }
                 }}
               >
                 {/* Hero Image */}
@@ -190,9 +191,9 @@ export function Welcome() {
                   sx={{
                     position: 'relative',
                     zIndex: 3,
-                    maxWidth: { xs: '300px', md: '500px' },
+                    maxWidth: { xs: '280px', md: '500px' },
                     width: '100%',
-                    mb: 4
+                    mb: { xs: 2, md: 4 }
                   }}
                 >
                   <img
@@ -200,7 +201,8 @@ export function Welcome() {
                     alt="AIDEN DePIN Network"
                     style={{
                       width: '100%',
-                      height: '500px',
+                      height: 'auto',
+                      maxHeight: { xs: '300px', md: '500px' },
                       objectFit: 'contain',
                       borderRadius: '12px'
                     }}
