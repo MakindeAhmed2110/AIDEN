@@ -1,17 +1,48 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { PostgresManager } from './postgres-manager.js';
 
 export class DatabaseManager {
   private db!: Database.Database;
   private dbPath: string;
+  private postgresManager?: PostgresManager;
+  private usePostgres: boolean;
 
   constructor(dbPath: string = 'depin.db') {
     this.dbPath = path.resolve(dbPath);
-    this.initializeDatabase();
+    this.usePostgres = !!process.env.DATABASE_URL || !!process.env.POSTGRES_URL;
+    
+    if (this.usePostgres) {
+      console.log('🐘 Using PostgreSQL database');
+      try {
+        this.postgresManager = new PostgresManager();
+        // Don't initialize here - will be done in startServer()
+      } catch (error) {
+        console.warn('⚠️ PostgreSQL initialization failed, falling back to SQLite:', error);
+        this.usePostgres = false;
+        this.initializeSQLiteDatabase();
+      }
+    } else {
+      console.log('📁 Using SQLite database');
+      this.initializeSQLiteDatabase();
+    }
   }
 
-  private initializeDatabase() {
+  async initializeDatabase(): Promise<void> {
+    if (this.usePostgres && this.postgresManager) {
+      await this.postgresManager.initializeDatabase();
+    }
+    // SQLite is already initialized in constructor
+  }
+
+  private async initializePostgresDatabase() {
+    if (this.postgresManager) {
+      await this.postgresManager.initializeDatabase();
+    }
+  }
+
+  private initializeSQLiteDatabase() {
     // Create database directory if it doesn't exist
     const dbDir = path.dirname(this.dbPath);
     if (!fs.existsSync(dbDir)) {
@@ -126,11 +157,41 @@ export class DatabaseManager {
   }
 
   getDatabase(): Database.Database {
+    if (this.usePostgres) {
+      throw new Error('Cannot get SQLite database when using PostgreSQL');
+    }
     return this.db;
   }
 
-  close() {
-    this.db.close();
+  getPostgresManager(): PostgresManager | undefined {
+    return this.postgresManager;
+  }
+
+  isUsingPostgres(): boolean {
+    return this.usePostgres;
+  }
+
+  // Unified query method that routes to appropriate database
+  async query(text: string, params?: any[]): Promise<any> {
+    if (this.usePostgres && this.postgresManager) {
+      return await this.postgresManager.query(text, params);
+    } else {
+      // For SQLite, we need to handle this differently since it's synchronous
+      const stmt = this.db.prepare(text);
+      if (params) {
+        return stmt.all(params);
+      } else {
+        return stmt.all();
+      }
+    }
+  }
+
+  async close() {
+    if (this.usePostgres && this.postgresManager) {
+      await this.postgresManager.close();
+    } else {
+      this.db.close();
+    }
   }
 }
 

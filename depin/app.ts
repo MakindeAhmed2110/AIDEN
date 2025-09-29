@@ -8,6 +8,7 @@ import authRoutes from './routes/auth';
 import depinRoutes from './routes/depin';
 import rewardRoutes from './routes/rewards';
 import { rewardAgent } from './services/reward-agent';
+import { dbManager } from './database/manager';
 
 // Load environment variables
 dotenv.config({ path: './env.local' });
@@ -65,17 +66,39 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 DePIN API server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
-  console.log(`🌐 DePIN endpoints: http://localhost:${PORT}/api/depin`);
-  console.log(`💰 Reward endpoints: http://localhost:${PORT}/api/rewards`);
-  
-  // Start the automated reward distribution agent
-  console.log('🤖 Starting automated reward distribution agent...');
-  rewardAgent.startAgent();
-});
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database
+    console.log('🔧 Initializing database...');
+    if (dbManager.isUsingPostgres()) {
+      console.log('🐘 Using PostgreSQL database');
+    } else {
+      console.log('📁 Using SQLite database');
+    }
+    
+    // Initialize database connection
+    await dbManager.initializeDatabase();
+    console.log('✅ Database initialization complete');
+    
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`🚀 DePIN API server running on port ${PORT}`);
+      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
+      console.log(`🌐 DePIN endpoints: http://localhost:${PORT}/api/depin`);
+      console.log(`💰 Reward endpoints: http://localhost:${PORT}/api/rewards`);
+      
+      // Start the automated reward distribution agent
+      console.log('🤖 Starting automated reward distribution agent...');
+      rewardAgent.startAgent();
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 export default app;
