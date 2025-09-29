@@ -11,6 +11,8 @@ import { rewardAgent } from './services/reward-agent';
 
 // Load environment variables
 dotenv.config({ path: './env.local' });
+// Also load from default .env file if it exists
+dotenv.config();
 
 const app = express();
 const PORT = process.env.API_PORT || 3001;

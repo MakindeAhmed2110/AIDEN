@@ -16,6 +16,8 @@ import {
 
 // Load environment variables
 dotenv.config({ path: './env.local' });
+// Also load from default .env file if it exists
+dotenv.config();
 
 export interface HederaWallet {
   accountId: string;

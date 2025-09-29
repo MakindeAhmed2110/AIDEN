@@ -70,6 +70,7 @@ AIDEN is a comprehensive **DePIN (Decentralized Physical Infrastructure Network)
    - Dynamic resource allocation
    - Performance optimization
    - Network health monitoring
+   - Automated reward distribution agent
 
 3. **Automated Reward System**
    - 70% earnings to personal savings vault
@@ -212,9 +213,14 @@ AIDEN is a comprehensive **DePIN (Decentralized Physical Infrastructure Network)
 
 ### Contract Deployment
 
-**Testnet Addresses:**
-- **RewardDistributor**: `0x6e35a1a39F37c92106f91a500df1A0A77a10CdfA`
-- **CharityVault**: `0x8Aa718d2cE41C595298C97bA4a330C0f35028B12`
+**Live Hedera Testnet Contracts:**
+- **RewardDistributor**: [`0x6e35a1a39F37c92106f91a500df1A0A77a10CdfA`](https://hashscan.io/testnet/contract/0x6e35a1a39F37c92106f91a500df1A0A77a10CdfA)
+- **CharityVault**: [`0x8Aa718d2cE41C595298C97bA4a330C0f35028B12`](https://hashscan.io/testnet/contract/0x8Aa718d2cE41C595298C97bA4a330C0f35028B12)
+
+**Contract Explorer Links:**
+- View live transactions and contract interactions on [HashScan Testnet](https://hashscan.io/testnet)
+- Monitor real-time contract activity and balance changes
+- Verify all reward distributions and charity donations on-chain
 
 ### Security Features
 
@@ -269,6 +275,152 @@ The 30% charity portion is automatically distributed to registered NGOs:
 - **Real-time Statistics**: Live dashboard with impact metrics
 - **Audit Trail**: Complete history of all distributions
 - **Public Verification**: Anyone can verify charity distributions
+
+---
+
+## 🤖 AI Agent - Automated Earnings Distribution
+
+### Overview
+
+The AIDEN AI Agent is an intelligent automation system that continuously monitors network activity, optimizes resource allocation, and automatically distributes earnings to users and charities. It operates 24/7 to ensure fair, transparent, and efficient reward distribution.
+
+### AI Agent Architecture & Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           AIDEN AI AGENT SYSTEM                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────┐    │
+│  │   Data          │───▶│   AI Analysis    │───▶│   Optimization      │    │
+│  │   Collection    │    │   Engine         │    │   Engine            │    │
+│  │                 │    │                  │    │                     │    │
+│  │ • Bandwidth     │    │ • Pattern        │    │ • Resource          │    │
+│  │   Metrics       │    │   Recognition    │    │   Matching          │    │
+│  │ • User Activity │    │ • Performance    │    │ • Load Balancing    │    │
+│  │ • Network Stats │    │   Analysis       │    │ • Efficiency        │    │
+│  │ • Points Data   │    │ • Anomaly        │    │   Optimization      │    │
+│  │                 │    │   Detection      │    │                     │    │
+│  └─────────────────┘    └──────────────────┘    └─────────────────────┘    │
+│           │                       │                       │                │
+│           ▼                       ▼                       ▼                │
+│  ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────┐    │
+│  │   Reward        │───▶│   Smart          │───▶│   Distribution      │    │
+│  │   Calculation   │    │   Contract       │    │   Execution         │    │
+│  │   Engine        │    │   Integration    │    │                     │    │
+│  │                 │    │                  │    │                     │    │
+│  │ • Points → HBAR │    │ • Hedera SDK    │    │ • 70% User Rewards  │    │
+│  │ • 70/30 Split   │    │ • Contract Calls │    │ • 30% Charity       │    │
+│  │ • Validation    │    │ • Transaction    │    │ • Real-time Updates │    │
+│  │ • Error Handling│    │   Management     │    │ • Audit Logging     │    │
+│  │                 │    │                  │    │                     │    │
+│  └─────────────────┘    └──────────────────┘    └─────────────────────┘    │
+│           │                       │                       │                │
+│           ▼                       ▼                       ▼                │
+│  ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────┐    │
+│  │   Monitoring    │───▶│   Reporting      │───▶│   Continuous        │    │
+│  │   & Analytics   │    │   & Dashboard    │    │   Learning          │    │
+│  │                 │    │                  │    │                     │    │
+│  │ • Real-time     │    │ • User           │    │ • Performance       │    │
+│  │   Metrics       │    │   Dashboards     │    │   Improvement       │    │
+│  │ • Health Checks │    │ • Impact         │    │ • Algorithm         │    │
+│  │ • Performance   │    │   Reports        │    │   Updates           │    │
+│  │   Tracking      │    │ • Transparency   │    │ • Network           │    │
+│  │                 │    │   Metrics        │    │   Optimization      │    │
+│  └─────────────────┘    └──────────────────┘    └─────────────────────┘    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key AI Agent Features
+
+#### 1. **Intelligent Data Collection**
+- **Real-time Monitoring**: Continuously tracks bandwidth contributions, user activity, and network performance
+- **Multi-source Integration**: Aggregates data from DePIN nodes, user dashboards, and network metrics
+- **Quality Assessment**: Evaluates the quality and reliability of bandwidth contributions
+
+#### 2. **Advanced Analytics Engine**
+- **Pattern Recognition**: Identifies usage patterns and optimal resource allocation strategies
+- **Performance Analysis**: Monitors network health and identifies bottlenecks
+- **Anomaly Detection**: Automatically detects and handles unusual activity or potential issues
+
+#### 3. **Automated Reward Calculation**
+- **Dynamic Pricing**: Adjusts reward rates based on network demand and supply
+- **Fair Distribution**: Ensures equitable reward distribution based on contribution quality
+- **Transparent Metrics**: Provides clear, auditable calculations for all rewards
+
+#### 4. **Smart Contract Integration**
+- **Automated Execution**: Seamlessly interacts with Hedera smart contracts
+- **Batch Processing**: Efficiently handles multiple reward distributions
+- **Error Recovery**: Implements robust error handling and retry mechanisms
+
+### Daily Distribution Process
+
+#### **Midnight UTC Trigger (00:00)**
+```
+1. Data Collection Phase
+   ├── Gather all user bandwidth contributions from the last 24 hours
+   ├── Calculate total points earned (1 MB = 1 point)
+   ├── Validate contribution quality and authenticity
+   └── Generate comprehensive activity report
+
+2. AI Analysis Phase
+   ├── Analyze contribution patterns and network performance
+   ├── Detect any anomalies or suspicious activity
+   ├── Optimize reward calculations based on network health
+   └── Prepare distribution parameters
+
+3. Reward Calculation Phase
+   ├── Convert points to HBAR (1 point = 0.001 HBAR)
+   ├── Apply 70/30 split (users/charity)
+   ├── Validate centralized wallet balance
+   └── Generate distribution transaction parameters
+
+4. Smart Contract Execution
+   ├── Fund RewardDistributor contract with total HBAR
+   ├── Execute batch distribution to all eligible users
+   ├── Automatically transfer 30% to CharityVault
+   └── Record all transactions on Hedera blockchain
+
+5. Post-Distribution Phase
+   ├── Reset daily points for all users
+   ├── Update user statistics and dashboards
+   ├── Generate impact reports for charity donations
+   └── Log all activities for audit and transparency
+```
+
+### AI Agent Benefits
+
+#### **For Users**
+- **Automatic Rewards**: No manual claiming required - rewards are distributed automatically
+- **Fair Compensation**: AI ensures rewards reflect actual contribution quality
+- **Transparent Process**: All calculations and distributions are visible on-chain
+
+#### **For Network**
+- **Optimal Performance**: AI continuously optimizes resource allocation
+- **Scalable Operations**: Handles growing user base without manual intervention
+- **Quality Assurance**: Maintains network integrity through automated monitoring
+
+#### **For Charities**
+- **Reliable Funding**: Consistent, automated donations based on network activity
+- **Transparent Tracking**: All donations are recorded and verifiable on-chain
+- **Impact Measurement**: Detailed reports on how funds are being used
+
+### Technical Implementation
+
+The AI Agent is implemented using:
+- **Node.js/TypeScript**: Core automation logic
+- **Cron Jobs**: Scheduled daily execution at midnight UTC
+- **Hedera SDK**: Smart contract integration
+- **SQLite Database**: Local data storage and analytics
+- **Real-time APIs**: Live network monitoring and user interaction
+
+### Monitoring & Transparency
+
+- **Real-time Dashboard**: Live view of AI Agent operations and network status
+- **Audit Logs**: Complete history of all AI decisions and actions
+- **Performance Metrics**: Continuous monitoring of system efficiency
+- **User Notifications**: Automated updates on reward distributions and network changes
 
 ---
 
@@ -505,7 +657,7 @@ Generate Impact Reports → Display on User Dashboard → Community Transparency
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/AIDENPlatform/aidenapp.git
+git clone https://github.com/MakindeAhmed2110/aidenapp.git
 cd aidenapp
 ```
 
@@ -572,9 +724,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Hedera Hashgraph** for providing the underlying blockchain infrastructure
-- **DePIN Community** for inspiration and collaboration
-- **Open Source Contributors** who make this project possible
-- **African Tech Community** for supporting innovation and digital inclusion
+- **Hedera Community** for inspiration and collaboration
+
 
 ---
 
