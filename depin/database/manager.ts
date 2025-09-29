@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 export class DatabaseManager {
-  private db: Database.Database;
+  private db!: Database.Database;
   private dbPath: string;
 
   constructor(dbPath: string = 'depin.db') {

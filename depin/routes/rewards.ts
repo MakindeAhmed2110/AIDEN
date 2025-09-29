@@ -111,7 +111,7 @@ router.post('/agent/stop', verifyAdmin, async (req: Request, res: Response) => {
  */
 router.get('/user/:userId', async (req: Request, res: Response) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(req.params.userId || '0');
     
     if (isNaN(userId)) {
       return res.status(400).json({
@@ -131,7 +131,7 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
     const potentialUserReward = potentialRewardHBAR * 0.7; // 70% to user
     const potentialCharityReward = potentialRewardHBAR * 0.3; // 30% to charity
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         userId,
@@ -153,7 +153,7 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error getting user reward info:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get user reward information'
     });

@@ -430,7 +430,7 @@ router.post('/sync-final', authenticateToken, async (req: Request, res: Response
 router.get('/epoch-earnings/:epochNumber?', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.userId;
-    const epochNumber = parseInt(req.params.epochNumber) || 1;
+    const epochNumber = parseInt(req.params.epochNumber || '1') || 1;
 
     if (!userId) {
       res.status(401).json({

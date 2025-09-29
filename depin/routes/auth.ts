@@ -26,7 +26,7 @@ router.post('/register', async (req: Request, res: Response) => {
     // Create user
     const result = await userService.createUser({ email, password });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'User created successfully',
       data: {
@@ -42,7 +42,7 @@ router.post('/register', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: error instanceof Error ? error.message : 'Registration failed'
     });
@@ -65,7 +65,7 @@ router.post('/login', async (req: Request, res: Response) => {
     // Login user
     const result = await userService.loginUser({ email, password });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Login successful',
       data: {
@@ -81,7 +81,7 @@ router.post('/login', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       message: error instanceof Error ? error.message : 'Login failed'
     });
@@ -119,7 +119,7 @@ router.get('/profile', async (req: Request, res: Response) => {
     // Get wallet balance
     const walletBalance = await userService.getUserWalletBalance(decoded.userId);
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         user: {
@@ -134,7 +134,7 @@ router.get('/profile', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Profile error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get profile'
     });
@@ -157,7 +157,7 @@ router.post('/privy-auth', async (req: Request, res: Response) => {
     // Create or get user with email-only authentication
     const result = await userService.createPrivyUser({ email });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Privy authentication successful',
       data: {
@@ -174,7 +174,7 @@ router.post('/privy-auth', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Privy authentication error:', error);
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: error instanceof Error ? error.message : 'Privy authentication failed'
     });
@@ -212,7 +212,7 @@ router.get('/wallet', async (req: Request, res: Response) => {
     // Get wallet balance
     const walletBalance = await userService.getUserWalletBalance(decoded.userId);
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         wallet: {
@@ -225,7 +225,7 @@ router.get('/wallet', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Wallet info error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get wallet information'
     });

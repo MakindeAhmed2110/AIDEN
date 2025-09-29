@@ -29,7 +29,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   }
 
   req.userId = decoded.userId;
-  next();
+  return next();
 };
 
 export const optionalAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -42,7 +42,7 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction) =>
     }
   }
   
-  next();
+  return next();
 };
 
 

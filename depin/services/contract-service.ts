@@ -62,7 +62,7 @@ export class ContractService {
   private ensureClientConfigured(): void {
     try {
       // Check if client has operator set by trying to get operator info
-      const operatorAccountId = this.client.getOperatorAccountId();
+      const operatorAccountId = this.client.operatorAccountId;
       if (!operatorAccountId) {
         throw new Error('No operator set');
       }
@@ -94,9 +94,9 @@ export class ContractService {
       let contractAddress = userAddress;
       if (userAddress.includes('.')) {
         const parts = userAddress.split('.');
-        const shard = parts[0].padStart(6, '0');
-        const realm = parts[1].padStart(6, '0');
-        const account = parts[2].padStart(6, '0');
+        const shard = (parts[0] || '').padStart(6, '0');
+        const realm = (parts[1] || '').padStart(6, '0');
+        const account = (parts[2] || '').padStart(6, '0');
         const hexString = (shard + realm + account).padStart(40, '0');
         contractAddress = '0x' + hexString;
       }
@@ -143,9 +143,9 @@ export class ContractService {
       let contractAddress = userAddress;
       if (userAddress.includes('.')) {
         const parts = userAddress.split('.');
-        const shard = parts[0].padStart(6, '0');
-        const realm = parts[1].padStart(6, '0');
-        const account = parts[2].padStart(6, '0');
+        const shard = (parts[0] || '').padStart(6, '0');
+        const realm = (parts[1] || '').padStart(6, '0');
+        const account = (parts[2] || '').padStart(6, '0');
         const hexString = (shard + realm + account).padStart(40, '0');
         contractAddress = '0x' + hexString;
       }
@@ -196,9 +196,9 @@ export class ContractService {
         if (addr.includes('.')) {
           // Convert Hedera address to Ethereum-style by padding and formatting
           const parts = addr.split('.');
-          const shard = parts[0].padStart(6, '0');
-          const realm = parts[1].padStart(6, '0');
-          const account = parts[2].padStart(6, '0');
+          const shard = (parts[0] || '').padStart(6, '0');
+          const realm = (parts[1] || '').padStart(6, '0');
+          const account = (parts[2] || '').padStart(6, '0');
           // Create a 40-character hex string (without 0x prefix)
           const hexString = (shard + realm + account).padStart(40, '0');
           return '0x' + hexString;

@@ -28,6 +28,7 @@ export class RewardDistributionAgent {
   private centralizedWalletAddress: string;
   private centralizedWalletPrivateKey: string;
   private isRunning: boolean = false;
+  private cronTask: any = null;
 
   constructor() {
     // Centralized wallet for funding rewards (using operator as centralized wallet)
@@ -53,7 +54,7 @@ export class RewardDistributionAgent {
     console.log('🚀 Starting automated reward distribution agent...');
     
     // Schedule daily reward distribution at midnight (00:00)
-    cron.schedule('0 0 * * *', async () => {
+    this.cronTask = cron.schedule('0 0 * * *', async () => {
       console.log('⏰ Daily reward distribution triggered at midnight');
       await this.distributeDailyRewards();
     }, {
@@ -79,7 +80,9 @@ export class RewardDistributionAgent {
       return;
     }
 
-    cron.destroy();
+    if (this.cronTask) {
+      this.cronTask.stop();
+    }
     this.isRunning = false;
     console.log('🛑 Reward distribution agent stopped');
   }

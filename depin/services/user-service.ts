@@ -192,9 +192,9 @@ export class UserService {
       if (existingUser) {
         console.log('🔄 User exists, returning existing wallet data');
         // If user exists, get their data and return it
-        const user = await this.getUserById(existingUser.id);
+        const user = await this.getUserById((existingUser as any).id);
         if (user) {
-          const token = this.generateToken(user.id);
+          const token = this.generateToken((user as any).id);
           this.createSession(user.id, token);
           
           // Return existing wallet data (we don't expose the actual wallet object for security)
@@ -255,9 +255,9 @@ export class UserService {
         console.log('🔄 UNIQUE constraint error, attempting to get existing user');
         const existingUser = this.db.prepare('SELECT id FROM users WHERE email = ?').get(userData.email);
         if (existingUser) {
-          const user = await this.getUserById(existingUser.id);
+          const user = await this.getUserById((existingUser as any).id);
           if (user) {
-            const token = this.generateToken(user.id);
+            const token = this.generateToken((user as any).id);
             this.createSession(user.id, token);
             
             const wallet: HederaWallet = {

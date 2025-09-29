@@ -59,7 +59,7 @@ export class HederaWalletManager {
         this.client.setOperator(AccountId.fromString(this.operatorId), privateKey);
         console.log('🔗 Hedera client initialized with operator credentials');
       } catch (error) {
-        console.warn('⚠️ Could not set operator credentials:', error.message);
+        console.warn('⚠️ Could not set operator credentials:', error instanceof Error ? error.message : 'Unknown error');
         console.log('🔗 Hedera client initialized (no operator credentials)');
       }
     } else {
@@ -231,16 +231,16 @@ export class HederaWalletManager {
       
       const parts = encryptedPrivateKey.split(':');
       if (parts.length === 3) {
-        const iv = Buffer.from(parts[0], 'hex');
-        const authTag = Buffer.from(parts[1], 'hex');
-        const encrypted = parts[2];
+        const iv = Buffer.from(parts[0] || '', 'hex');
+        const authTag = Buffer.from(parts[1] || '', 'hex');
+        const encrypted = parts[2] || '';
         
         const decipher = crypto.createDecipheriv(algorithm, key, iv);
         decipher.setAAD(Buffer.from('aiden-depin-wallet', 'utf8'));
         decipher.setAuthTag(authTag);
         
-        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8') || '';
+        decrypted += decipher.final('utf8') || '';
         
         return decrypted;
       } else {
