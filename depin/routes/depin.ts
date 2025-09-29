@@ -271,12 +271,10 @@ router.get('/points', authenticateToken, async (req: Request, res: Response): Pr
     res.json({
       success: true,
       message: 'User points retrieved successfully',
-      data: { 
-        points: {
-          totalEpochPoints: userPoints.totalEpochPoints,
-          todayPoints: userPoints.todayPoints,
-          lastUpdated: userPoints.lastUpdated
-        }
+      data: {
+        totalEpochPoints: userPoints.totalEpochPoints,
+        todayPoints: userPoints.todayPoints,
+        lastUpdated: userPoints.lastUpdated.toISOString()
       }
     });
   } catch (error) {

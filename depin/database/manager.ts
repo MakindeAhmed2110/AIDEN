@@ -1,45 +1,20 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { PostgresManager } from './postgres-manager.js';
 
 export class DatabaseManager {
   private db!: Database.Database;
   private dbPath: string;
-  private postgresManager?: PostgresManager;
-  private usePostgres: boolean;
 
   constructor(dbPath: string = 'depin.db') {
     this.dbPath = path.resolve(dbPath);
-    this.usePostgres = !!process.env.DATABASE_URL || !!process.env.POSTGRES_URL;
-    
-    if (this.usePostgres) {
-      console.log('🐘 Using PostgreSQL database');
-      try {
-        this.postgresManager = new PostgresManager();
-        // Don't initialize here - will be done in startServer()
-      } catch (error) {
-        console.warn('⚠️ PostgreSQL initialization failed, falling back to SQLite:', error);
-        this.usePostgres = false;
-        this.initializeSQLiteDatabase();
-      }
-    } else {
-      console.log('📁 Using SQLite database');
-      this.initializeSQLiteDatabase();
-    }
+    console.log('📁 Using SQLite database');
+    this.initializeSQLiteDatabase();
   }
 
   async initializeDatabase(): Promise<void> {
-    if (this.usePostgres && this.postgresManager) {
-      await this.postgresManager.initializeDatabase();
-    }
     // SQLite is already initialized in constructor
-  }
-
-  private async initializePostgresDatabase() {
-    if (this.postgresManager) {
-      await this.postgresManager.initializeDatabase();
-    }
+    console.log('✅ SQLite database initialized');
   }
 
   private initializeSQLiteDatabase() {
@@ -124,6 +99,7 @@ export class DatabaseManager {
         latency_ms REAL NOT NULL,
         uptime_percentage REAL NOT NULL,
         test_duration_ms INTEGER NOT NULL,
+        points_earned INTEGER DEFAULT 0,
         contribution_timestamp DATETIME NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
@@ -157,41 +133,21 @@ export class DatabaseManager {
   }
 
   getDatabase(): Database.Database {
-    if (this.usePostgres) {
-      throw new Error('Cannot get SQLite database when using PostgreSQL');
-    }
     return this.db;
   }
 
-  getPostgresManager(): PostgresManager | undefined {
-    return this.postgresManager;
-  }
-
-  isUsingPostgres(): boolean {
-    return this.usePostgres;
-  }
-
-  // Unified query method that routes to appropriate database
+  // SQLite query method
   async query(text: string, params?: any[]): Promise<any> {
-    if (this.usePostgres && this.postgresManager) {
-      return await this.postgresManager.query(text, params);
+    const stmt = this.db.prepare(text);
+    if (params) {
+      return stmt.all(params);
     } else {
-      // For SQLite, we need to handle this differently since it's synchronous
-      const stmt = this.db.prepare(text);
-      if (params) {
-        return stmt.all(params);
-      } else {
-        return stmt.all();
-      }
+      return stmt.all();
     }
   }
 
   async close() {
-    if (this.usePostgres && this.postgresManager) {
-      await this.postgresManager.close();
-    } else {
-      this.db.close();
-    }
+    this.db.close();
   }
 }
 

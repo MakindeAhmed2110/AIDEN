@@ -70,16 +70,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 async function startServer() {
   try {
     // Initialize database
-    console.log('🔧 Initializing database...');
-    if (dbManager.isUsingPostgres()) {
-      console.log('🐘 Using PostgreSQL database');
-    } else {
-      console.log('📁 Using SQLite database');
-    }
-    
-    // Initialize database connection
+    console.log('🔧 Initializing SQLite database...');
     await dbManager.initializeDatabase();
-    console.log('✅ Database initialization complete');
+    console.log('✅ SQLite database initialization complete');
     
     // Start server
     app.listen(PORT, () => {

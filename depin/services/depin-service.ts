@@ -558,22 +558,26 @@ export class DePINService {
         INSERT INTO bandwidth_contributions (
           user_id, 
           node_id, 
-          data_served, 
-          download_speed, 
-          upload_speed, 
-          latency, 
-          uptime, 
-          points_earned, 
-          created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          session_id,
+          contribution_bytes, 
+          download_speed_mbps, 
+          upload_speed_mbps, 
+          latency_ms, 
+          uptime_percentage, 
+          test_duration_ms,
+          points_earned,
+          contribution_timestamp
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         userId,
         'frontend-simulation', // Use a special node ID for frontend measurements
+        `session-${Date.now()}`, // Generate session ID
         dataServed,
         downloadSpeed,
         uploadSpeed,
         latency,
         uptime,
+        30000, // 30 second test duration
         pointsEarned,
         new Date().toISOString()
       );
