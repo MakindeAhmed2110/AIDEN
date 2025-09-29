@@ -16,7 +16,9 @@ import {
   Paper,
   Chip,
   LinearProgress,
-  Divider
+  Divider,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { 
   EmojiEvents as RewardsIcon,
@@ -25,6 +27,9 @@ import {
   CalendarToday as CalendarIcon,
   Star as StarIcon
 } from '@mui/icons-material';
+import { usePrivy } from '@privy-io/react-auth';
+import { apiService, type RewardInfo } from '../services/api';
+import CountUp from 'react-countup';
 
 // PolySans font family constant
 const polySansFont = '"PolySans Neutral", "PolySans Median", "Styrene A Web", "Helvetica Neue", Sans-Serif';
@@ -58,7 +63,83 @@ const mockRewardsData = {
 };
 
 export default function Rewards() {
-  const [rewardsData, setRewardsData] = useState(mockRewardsData);
+  const { user: privyUser, authenticated } = usePrivy();
+  const [rewardsData, setRewardsData] = useState<RewardInfo | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
+
+  // Initialize authentication and fetch rewards data
+  useEffect(() => {
+    const initializeRewards = async () => {
+      if (!authenticated || !privyUser?.email?.address) {
+        setError('Please sign in to view your rewards.');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Check if backend is available
+        const isBackendHealthy = await apiService.checkHealth();
+        
+        if (!isBackendHealthy) {
+          console.log('⚠️ Backend not available, using demo mode');
+          setDemoMode(true);
+          setRewardsData({
+            userId: 1,
+            points: {
+              today: 45,
+              total: 1250,
+              lastUpdated: new Date().toISOString()
+            },
+            wallet: {
+              balance: 1575000000, // 15.75 HBAR in tinybars
+              balanceInHbar: 15.75
+            },
+            potentialRewards: {
+              totalHBAR: 8.25,
+              userReward: 5.78,
+              charityReward: 2.47
+            }
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Backend is available, authenticate
+        const authResponse = await apiService.authenticateWithPrivy({
+          email: privyUser.email.address
+        });
+
+        if (authResponse.success && authResponse.data) {
+          setAuthToken(authResponse.data.token);
+          setDemoMode(false);
+
+          // Fetch rewards data
+          const rewardsResponse = await apiService.getUserRewards(authResponse.data.user.id, authResponse.data.token);
+          if (rewardsResponse.success && rewardsResponse.data) {
+            setRewardsData(rewardsResponse.data);
+          } else {
+            setError('Failed to fetch rewards data');
+          }
+        } else {
+          setError('Failed to authenticate with backend');
+          setDemoMode(true);
+        }
+      } catch (error) {
+        console.error('Error initializing rewards:', error);
+        setError('Failed to connect to backend');
+        setDemoMode(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeRewards();
+  }, [authenticated, privyUser?.email?.address]);
 
   const formatHbar = (amount: number) => {
     return `${amount.toFixed(2)} HBAR`;
@@ -81,8 +162,54 @@ export default function Rewards() {
     }
   };
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (error && !demoMode) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => window.location.reload()}
+          sx={{ fontFamily: polySansFont }}
+        >
+          Retry
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!rewardsData) {
+    return (
+      <Box>
+        <Alert severity="info">
+          No rewards data available. Please connect to the DePIN network to start earning rewards.
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
     <Box>
+      {demoMode && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="h6" sx={{ fontFamily: polySansFont, mb: 1 }}>
+            🎯 Demo Mode - Rewards Preview
+          </Typography>
+          <Typography variant="body2">
+            Backend is not available. This shows what your rewards will look like when connected.
+          </Typography>
+        </Alert>
+      )}
+
       {/* Page Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ 
@@ -97,7 +224,7 @@ export default function Rewards() {
           color: '#6b7280',
           fontFamily: polySansFont
         }}>
-          Track your HBAR rewards and points for Epoch {rewardsData.currentEpoch}
+          Track your HBAR rewards and points for Epoch 0
         </Typography>
       </Box>
 
@@ -127,7 +254,11 @@ export default function Rewards() {
                 fontFamily: polySansFont,
                 mb: 1
               }}>
-                {rewardsData.totalPoints.toLocaleString()}
+                <CountUp 
+                  end={rewardsData.points.total} 
+                  duration={1} 
+                  separator=","
+                />
               </Typography>
               <Typography variant="body2" sx={{ 
                 color: '#6b7280',
@@ -164,7 +295,12 @@ export default function Rewards() {
                 fontFamily: polySansFont,
                 mb: 1
               }}>
-                {formatHbar(rewardsData.hbarBalance)}
+                <CountUp 
+                  end={rewardsData.wallet.balanceInHbar} 
+                  duration={1} 
+                  decimals={2}
+                  suffix=" HBAR"
+                />
               </Typography>
               <Typography variant="body2" sx={{ 
                 color: '#6b7280',
@@ -201,13 +337,18 @@ export default function Rewards() {
                 fontFamily: polySansFont,
                 mb: 1
               }}>
-                {formatHbar(rewardsData.pendingRewards)}
+                <CountUp 
+                  end={rewardsData.potentialRewards.userReward} 
+                  duration={1} 
+                  decimals={2}
+                  suffix=" HBAR"
+                />
               </Typography>
               <Typography variant="body2" sx={{ 
                 color: '#6b7280',
                 fontFamily: polySansFont
               }}>
-                Next payout: {formatDate(rewardsData.nextRewardDate)}
+                Potential user reward
               </Typography>
             </CardContent>
           </Card>
@@ -238,7 +379,7 @@ export default function Rewards() {
                 fontFamily: polySansFont,
                 mb: 1
               }}>
-                {rewardsData.currentEpoch}
+                0
               </Typography>
               <Typography variant="body2" sx={{ 
                 color: '#6b7280',
@@ -366,7 +507,7 @@ export default function Rewards() {
               variant="contained"
               size="large"
               startIcon={<RewardsIcon />}
-              disabled={rewardsData.pendingRewards === 0}
+              disabled={rewardsData.potentialRewards.userReward === 0}
               sx={{
                 backgroundColor: '#3b82f6',
                 color: '#ffffff',
@@ -385,7 +526,7 @@ export default function Rewards() {
                 }
               }}
             >
-              Claim {formatHbar(rewardsData.pendingRewards)} Rewards
+              Claim {rewardsData.potentialRewards.userReward.toFixed(2)} HBAR Rewards
             </Button>
           </Box>
         </Grid>

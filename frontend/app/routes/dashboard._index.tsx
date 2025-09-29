@@ -34,6 +34,7 @@ import {
 import { Outlet } from 'react-router';
 import { 
   Dashboard as DashboardIcon,
+  Speed as BandwidthIcon,
   AccountBalanceWallet as WalletIcon,
   People as ReferralIcon,
   EmojiEvents as RewardsIcon,
@@ -261,6 +262,7 @@ export default function DashboardLayout() {
   const currentPageTitle = () => {
     switch (location.pathname) {
       case '/dashboard/overview': return 'Dashboard';
+      case '/dashboard/bandwidth': return 'Bandwidth Monitoring';
       case '/dashboard/wallets': return 'Wallet';
       case '/dashboard/referrals': return 'Referral Program';
       case '/dashboard/rewards': return 'Rewards';

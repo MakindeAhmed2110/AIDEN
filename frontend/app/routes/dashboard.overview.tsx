@@ -289,25 +289,16 @@ export default function Overview() {
 
   const fetchPointsData = async (token: string) => {
     try {
-      const response = await fetch('http://localhost:3001/api/depin/points', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data?.points) {
-          setUserPoints({
-            totalEpochPoints: data.data.points.totalEpochPoints,
-            todayPoints: data.data.points.todayPoints,
-            lastUpdated: data.data.points.lastUpdated
-          });
-          console.log('⭐ Points data fetched:', data.data.points);
-        }
+      const response = await apiService.getUserPoints(token);
+      if (response.success && response.data) {
+        setUserPoints({
+          totalEpochPoints: response.data.totalEpochPoints,
+          todayPoints: response.data.todayPoints,
+          lastUpdated: response.data.lastUpdated
+        });
+        console.log('⭐ Points data fetched:', response.data);
       } else {
-        console.error('Failed to fetch points data:', response.status);
+        console.error('Failed to fetch points data:', response.message);
       }
     } catch (error) {
       console.error('Error fetching points data:', error);
@@ -316,25 +307,31 @@ export default function Overview() {
 
   const fetchNetworkStats = async (token: string) => {
     try {
-      const response = await fetch('http://localhost:3001/api/depin/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data?.stats) {
-          setNetworkStats(prevStats => ({
-            ...prevStats,
-            ...data.data.stats,
-            ...data.data.contributionStats
-          }));
-          console.log('📊 Network stats fetched:', data.data.stats);
-        }
+      const response = await apiService.getUserStats(token);
+      if (response.success && response.data) {
+        const { stats, contributionStats, epochEarnings, lastSessionData } = response.data;
+        
+        setNetworkStats(prevStats => ({
+          ...prevStats,
+          totalNodes: stats?.totalNodes || 0,
+          activeNodes: stats?.activeNodes || 0,
+          totalBytesServed: contributionStats?.totalContributionBytes || 0,
+          totalGBServed: (contributionStats?.totalContributionBytes || 0) / (1024 * 1024 * 1024),
+          totalContributions: contributionStats?.totalContributions || 0,
+          totalContributionBytes: contributionStats?.totalContributionBytes || 0,
+          totalContributionGB: (contributionStats?.totalContributionBytes || 0) / (1024 * 1024 * 1024),
+          averageDownloadSpeed: contributionStats?.averageDownloadSpeed || 0,
+          averageUploadSpeed: contributionStats?.averageUploadSpeed || 0,
+          averageLatency: contributionStats?.averageLatency || 0,
+          averageContributionUptime: contributionStats?.averageUptime || 0,
+          lastContributionTime: lastSessionData?.contribution_timestamp || null,
+          epochPoints: epochEarnings?.epochEarnings || 0,
+          todayPoints: epochEarnings?.epochEarnings || 0
+        }));
+        
+        console.log('📊 Network stats fetched:', response.data);
       } else {
-        console.error('Failed to fetch network stats:', response.status);
+        console.error('Failed to fetch network stats:', response.message);
       }
     } catch (error) {
       console.error('Error fetching network stats:', error);
@@ -597,31 +594,16 @@ export default function Overview() {
         };
       });
 
-      // Try to send measurement to backend if auth token is available
+      // Try to send bandwidth proof to backend if auth token is available
       if (authToken) {
-        const measurementData = {
-          dataServed: dataServed,
-          downloadSpeed: downloadSpeed,
-          uploadSpeed: uploadSpeed,
-          latency: latency,
-          uptime: uptime,
-          pointsEarned: pointsEarned
-        };
-
+        const bandwidthProof = apiService.generateBandwidthProof('main-node', dataServed);
+        
         try {
-          const response = await fetch('http://localhost:3001/api/depin/measurement', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${authToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(measurementData)
-          });
-
-          if (response.ok) {
-            console.log('📊 Measurement sent to backend:', measurementData);
+          const response = await apiService.submitBandwidthProof(bandwidthProof, authToken);
+          if (response.success) {
+            console.log('📊 Bandwidth proof submitted to backend:', response.data);
           } else {
-            console.log('⚠️ Failed to send measurement to backend:', response.status);
+            console.log('⚠️ Failed to submit bandwidth proof:', response.message);
           }
         } catch (backendError) {
           console.log('⚠️ Backend error, continuing with frontend simulation:', backendError);
